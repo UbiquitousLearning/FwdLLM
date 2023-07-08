@@ -41,6 +41,9 @@ class FedAVGClientManager(ClientManager):
             global_model_params = transform_list_to_tensor(global_model_params)
         
         # global_model_params = dequantize_params(global_model_params)
+        
+        # ad_hoc
+        # self.trainer.trainer.model_trainer.cur_v_num_index += 1
 
         self.trainer.update_model(global_model_params)
         self.trainer.update_dataset(client_index)
@@ -64,6 +67,9 @@ class FedAVGClientManager(ClientManager):
             model_params = dequantize_params(model_params)
             # for k in model_params.keys():
             #     model_params[k] = self.compressor.decompress(model_params[k][0],model_params[k][1])
+
+        # ad_hoc
+        # self.trainer.trainer.model_trainer.cur_v_num_index += 1
 
         self.trainer.update_model(model_params)
         self.trainer.update_dataset(client_index)

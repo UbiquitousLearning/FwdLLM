@@ -63,6 +63,8 @@ class ForwardTextClassificationTrainer:
             self.trainable_module_num = 7
             self.cur_module = 0
 
+        # self.adhoc_v_num_list = [1,4,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7]
+        # self.cur_v_num_index = -1
         # self.fmodel, self.params, self.buffers = fc.make_functional_with_buffers(model)
 
     def set_data(self, train_dl=None, test_dl=None):
@@ -165,10 +167,13 @@ class ForwardTextClassificationTrainer:
         # logging.info(f"train module: {cur_module}")
         # self.cur_module = (self.cur_module+1)%self.trainable_module_num
 
+        muti_v_num = 10
         with torch.no_grad():
             for epoch in range(0, self.args.epochs):
                 for batch_idx, batch in enumerate(self.train_dl):
-                    for _ in range(self.trainable_module_num):
+                    # for _ in range(self.trainable_module_num):
+                    for _ in range(muti_v_num):
+
                         batch = tuple(t for t in batch)
                         x = batch[1].to(device)
                         labels = batch[4].to(device)
@@ -210,7 +215,7 @@ class ForwardTextClassificationTrainer:
                         jvp = (terbulence_loss - loss)/(2*h)
                         
                         for j, fg in enumerate(self.grad):
-                            fg.add_(jvp*v_params[j]/self.trainable_module_num)
+                            fg.add_(jvp*v_params[j]/muti_v_num)
 
 
                         current_loss = loss.item()
@@ -513,8 +518,8 @@ class TextClassificationTrainer:
 
                 # (loss), logits, (hidden_states), (attentions)
                 # t1 = time.time()
-                with autocast():
-                    output = self.model(x)
+                # with autocast():
+                output = self.model(x)
                 
                 logits = output[0]
 

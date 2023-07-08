@@ -453,7 +453,7 @@ class TextClassificationTrainer:
         for epoch in range(0, self.args.epochs):
 
             for batch_idx, batch in enumerate(self.train_dl):
-                if batch_idx == 300:
+                if batch_idx == 3000:
                     print(f"avg forward: {sum(forward)/len(forward)}")
                     print(f"avg backward: {sum(backward)/len(backward)}")
                     print(f"avg optimize: {sum(optimize)/len(optimize)}")
@@ -473,7 +473,7 @@ class TextClassificationTrainer:
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
                 t2 = time.time()
                 logging.info(f"forward use time: {t2-t1}")
-                forward.append(t2-t1)
+                # forward.append(t2-t1)
 
                 if self.args.fl_algorithm == "FedProx":
                     fed_prox_reg = 0.0
@@ -502,7 +502,7 @@ class TextClassificationTrainer:
 
                 t2 = time.time()
                 logging.info(f"backward use time: {t2 -t1}")
-                backward.append(t2-t1)
+                # backward.append(t2-t1)
 
                 # tr_loss += loss.item()
                 if (batch_idx + 1) % self.args.gradient_accumulation_steps == 0:
@@ -627,8 +627,8 @@ class TextClassificationTrainer:
         self.args.warmup_steps = warmup_steps if self.args.warmup_steps == 0 else self.args.warmup_steps
         logging.info("warmup steps = %d" % self.args.warmup_steps)
         # freeze exps only apply for distilbert
-        if self.args.model_type == "distilbert" or self.args.model_type == "bert":
-            self.freeze_model_parameters(model)
+        # if self.args.model_type == "distilbert" or self.args.model_type == "bert":
+        self.freeze_model_parameters(model)
         if self.args.fl_algorithm == "FedOPT" or self.args.fl_algorithm == "":
             optimizer = AdamW(model.parameters(), lr=self.args.learning_rate, eps=self.args.adam_epsilon)
         else:
@@ -657,4 +657,9 @@ class TextClassificationTrainer:
         for module in modules:
             for param in module.parameters():
                 param.requires_grad = False
+
+        # bitfit
+        # for n,p in model.named_parameters():
+        #     if not("bias" in n or "classifier" in n):
+        #         p.requires_grad = False
         logging.info(get_parameter_number(model))

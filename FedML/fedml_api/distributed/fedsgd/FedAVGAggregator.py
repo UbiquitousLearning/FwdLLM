@@ -72,20 +72,23 @@ class FedAVGAggregator(object):
         model_list = []
         training_num = 0
 
+        # self.warmup_rounds = 20
         if current_round < self.warmup_rounds:
-            ratio = float(current_round) / float(max(1, self.warmup_rounds))
+            ratio = float(current_round+1) / float(max(1, self.warmup_rounds))
         else:
             ratio = max(
             0.0, float(self.args.comm_round - current_round) / float(max(1, self.args.comm_round - self.warmup_rounds))
         )
         learning_rate = self.args.learning_rate * ratio
+        logging.info(f"learning rate: {learning_rate}")
 
         for idx in range(self.worker_num):
             model_list.append((self.sample_num_dict[idx], self.model_dict[idx]))
             training_num += self.sample_num_dict[idx]
         
         # self.model_dict在聚合的过程中会被改变,很奇怪，这里先存一个deepcopy吧，用于后面cache_v
-        model_dict_cached = copy.deepcopy(self.model_dict)
+        # model_dict_cached = copy.deepcopy(self.model_dict)
+        # origin_param = copy.deepcopy(self.get_global_model_params())
 
         # cached_v:  (num, params)
         logging.info(f"len of cached v: {len(self.cached_v)}")
@@ -96,8 +99,6 @@ class FedAVGAggregator(object):
 
         logging.info("len of self.model_dict[idx] = " + str(len(self.model_dict)))
         
-        origin_param = copy.deepcopy(self.get_global_model_params())
-
         # old_param = self.get_global_model_params()
         old_param = self.trainer.model.parameters()
         
@@ -120,18 +121,18 @@ class FedAVGAggregator(object):
             next(old_param).detach().to("cpu").sub_(learning_rate * averaged_params[id] / training_num)       
 
         # 在前1000个batch上快速测试一下新模型的准确率
-        cur_model_acc = self.trainer.quick_test(self.device,500)
-        if cur_model_acc>self.previous_acc or len(self.cached_v) >= 9:
-            # 当前模型更好,清空cached_v,更新cur_acc
-            self.cached_v = []
-            self.previous_acc = cur_model_acc
+        # cur_model_acc = self.trainer.quick_test(self.device,500)
+        # if cur_model_acc>self.previous_acc or len(self.cached_v) >= 9:
+        #     # 当前模型更好,清空cached_v,更新cur_acc
+        #     self.cached_v = []
+        #     self.previous_acc = cur_model_acc
         # cur_model_loss = self.trainer.quick_test_loss(self.device,500)
         # if cur_model_loss<self.previous_loss:
         #     # 当前模型更好,清空cached_v,更新cur_acc
         #     self.cached_v = []
         #     self.previous_loss = cur_model_loss
-        # if True:
-        #     pass
+        if True:
+            pass
         else:
             logging.info("current model is not good enough, calculate more v")
             # 当前模型不行，v不够，暂存起来，后面再计算更多的v

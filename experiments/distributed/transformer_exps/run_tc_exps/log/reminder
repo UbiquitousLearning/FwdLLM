@@ -1,0 +1,57 @@
+模型:bert distilbert
+数据集:20news agnews(自己实现的uniform_client_1000,但是20news的数据量比较少,1000个client则一个只有13条数据,agnews为120跳)
+method:fedavg,fedsgd,fedfwd
+
+原始fedavg k个client需要起k个进程,不太现实,改为用两个进程。结果发现fedavg在lr=0.001的时候,在各个模型和数据集上表现都很差。
+怀疑是改的有问题,但在lr=0.1时效果很好,并且对比之前k个进程的方式,聚合效果一致,排除。
+
+bert 使用width24效果很差,agnews上fedsgd 500轮只到0.7,20news准确率不动
+对与agnews,准确率到0.7,还算能上去。尝试,改为48,fedsgd能到0.8以上
+对于20news,认为是wid24不够,并且每个client数据太少,改为client100,width48,好像都不太有效果,尝试增大lr?
+
+目前有
+distilbert+agnews
+bert width24 + agnews
+
+正在跑
+distilbert + 20news_client100
+尝试一下bert + 20news_client100 fedfwd lr = 0.01的效果
+
+20news准确率还上不去
+
+
+两个数据集都在distilbert上表现得很好,但是bert上几乎准确率不上升
+参数量是基本一致的,bert是12层,宽度24distilbert 6层,宽度48,是宽度太低导致的吗?
+深度 宽度 balance?或是可以按深度分层，拆开来训练？
+
+
+在正常反向传播的方法中，反向的时间与前向相当，甚至更短?
+
+20230308  TODO:
+还是尝试更多seting:
+bert用freeze+width48
+learning rate
+batch size调小
+探究学习率和client_num的数量
+
+20230314
+在跑：
+distilbert+agnews lr 1e-2 准确率到0.89
+
+想再试试lr 1e-1, 大准确率要更多client,试一下更多client,调小batchsize,改为bs=1
+大lr agnews 3000client acc到0.83就开始掉    20news 1000client 准确率上不去
+
+bert width48 lr0.01 more_client 两个数据集 3种方法
+distilbert 20news lr0.01
+
+20news lr 0.01很慢 0.1还可以 但是fwd根本用不了这么大的学习率 
+
+batchsize大好像能好点 验证一下 用bert_width48 agnews client_num500 bs=8和bs=1对比
+对比 client_num500 bs=1 并没有带来更快的收敛  对比client_num1000 bs=1 更慢
+
+感觉more client不太靠谱 还是1000client
+
+重新捋一下 lr=0.01 两个数据集 两个模型 目前有的distilbert agnews
+先把bert agnews跑了  20news 用total_client_1000 尝试lr0.01和lr0.1
+
+nlp数据集多试一些，加入cv

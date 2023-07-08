@@ -492,8 +492,8 @@ class TextClassificationTrainer:
 
                 # (loss), logits, (hidden_states), (attentions)
                 # t1 = time.time()
-                with autocast():
-                    output = self.model(x)
+                # with autocast():
+                output = self.model(x)
                 
                 logits = output[0]
 

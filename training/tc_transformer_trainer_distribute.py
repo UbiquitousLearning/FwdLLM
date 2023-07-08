@@ -63,6 +63,32 @@ class ForwardTextClassificationTrainer:
         # Used for fedtrainer
         self.train_dl = train_dl
         self.test_dl = test_dl
+    
+    def calculate_cos_sim(self,A,target_grad):
+        batch_size = 1000
+
+        # 计算总批次数
+        num_batches = math.ceil(A.size(0) / batch_size)
+
+        # 创建一个空的结果张量
+        result = torch.empty(A.size(0))
+
+        # 逐批次计算余弦相似度
+        for i in range(num_batches):
+            # 获取当前批次的起始索引和结束索引
+            start_idx = i * batch_size
+            end_idx = min((i + 1) * batch_size, A.size(0))
+
+            # 提取当前批次的向量
+            batch = A[start_idx:end_idx].to(self.device)
+
+            # 计算当前批次的余弦相似度
+            similarity = torch.cosine_similarity(batch, target_grad, dim=-1)
+
+            # 将结果保存到结果张量的对应位置
+            result[start_idx:end_idx] = similarity
+
+            return similarity
 
     def train_model(self, device=None):
         if not device:
@@ -80,62 +106,65 @@ class ForwardTextClassificationTrainer:
         v_num = len(self.train_dl)
         v_buffer = {}
         index = 0
-        # for k,v in self.model.named_parameters():
-        #     # logging.info(index)
-        #     if self.grad != None and v.requires_grad:
-        #         # logging.info("generate v")
-        #         candidate_v = torch.stack([torch.randn_like(v) for _ in range(v_num*10)],dim=0)
-        #         target_grad = self.grad[index]
-
-        #         # logging.info("flatten")
-        #         target_grad = torch.flatten(target_grad)
-        #         candidate_v = torch.flatten(candidate_v,start_dim=1)
-
-        #         cos_sim = torch.cosine_similarity(target_grad, candidate_v, dim=-1).abs()
-        #         # sort the cosine similarity values in descending order and get the indices
-        #         sorted_values, sorted_indices = torch.sort(cos_sim, descending=True)
-
-        #         v_buffer[index] = [candidate_v[i].reshape(v.shape) for i in sorted_indices[:v_num]]
-        #     else:
-        #         # logging.info("here")
-        #         v_buffer[index] = torch.stack([torch.randn_like(v) for _ in range(v_num)],dim=0)
-        #     index += 1
         if self.mode_counter:
-            with torch.no_grad():   
-                for k,value in self.model.named_parameters():
-                    torch.cuda.empty_cache()
-                    # logging.info(index)
-                    if self.grad != None:
-                        if value.requires_grad:
-                            # logging.info("generate v")
-                            # selected_coos = torch.clamp(torch.normal(mean=0.75, std=1, size=(20, 20)),min=0.01, max=0.99)
-                            # selected_cos = torch.rand(v_num,1).to(self.device)
-                            selected_cos = (torch.rand(v_num,1)*0.5+0.5).to(self.device)
-                            target_grad = self.grad[index]
-                            target_grad = torch.flatten(target_grad)
-                            target_grad = target_grad/target_grad.norm()
+            for k,v in self.model.named_parameters():
+                # logging.info(index)
+                if self.grad != None and v.requires_grad:
+                    # logging.info("generate v")
+                    # candidate_v = torch.stack([torch.randn_like(v,device="cpu") for _ in range(v_num*10)],dim=0)
+                    shape = v.shape
+                    candidate_v = torch.randn((v_num*10,*shape),device="cpu")
+                    target_grad = self.grad[index]
 
-                            # 随机向量
-                            r = torch.stack([torch.randn_like(target_grad) for _ in range(v_num)],dim=0)
+                    # logging.info("flatten")
+                    target_grad = torch.flatten(target_grad)
+                    candidate_v = torch.flatten(candidate_v,start_dim=1)
 
-                            # 根据随机向量算出的垂直grad的向量
-                            grad_perp = r - (r@(target_grad.unsqueeze(-1)))*target_grad
-                            # Make it a unit vector:
-                            grad_perp = grad_perp / (grad_perp.norm(dim=-1)[:,None])
+                    cos_sim = self.calculate_cos_sim(candidate_v,target_grad)
+                    # cos_sim = torch.cosine_similarity(target_grad, candidate_v, dim=-1).abs()
+                    # sort the cosine similarity values in descending order and get the indices
+                    sorted_values, sorted_indices = torch.sort(cos_sim, descending=True)
 
-                            # 算出v
-                            candidate_v = selected_cos*target_grad + torch.sqrt(torch.tensor(1,device=self.device) - selected_cos**2)*grad_perp
-                            candidate_v = candidate_v*torch.tensor((target_grad.shape[0]**0.5),device=self.device)
+                    v_buffer[index] = [candidate_v[i].reshape(v.shape) for i in sorted_indices[:v_num]]
+                # else:
+                #     v_buffer[index] = torch.stack([torch.randn_like(v) for _ in range(v_num)],dim=0)
+                index += 1
+        # if self.mode_counter:
+        #     with torch.no_grad():   
+        #         for k,value in self.model.named_parameters():
+        #             torch.cuda.empty_cache()
+        #             # logging.info(index)
+        #             if self.grad != None:
+        #                 if value.requires_grad:
+        #                     # logging.info("generate v")
+        #                     # selected_coos = torch.clamp(torch.normal(mean=0.75, std=1, size=(20, 20)),min=0.01, max=0.99)
+        #                     # selected_cos = torch.rand(v_num,1).to(self.device)
+        #                     selected_cos = (torch.rand(v_num,1)*0.5+0.5).to(self.device)
+        #                     target_grad = self.grad[index]
+        #                     target_grad = torch.flatten(target_grad)
+        #                     target_grad = target_grad/target_grad.norm()
 
-                            v_shape = list(value.shape)
-                            v_shape.insert(0,v_num)
-                            v_buffer[index] = candidate_v.reshape(v_shape).to("cpu")
-                        # else:
-                        #     v_buffer[index] = torch.stack([torch.zeros_like(value) for _ in range(v_num)],dim=0).to("cpu")
-                    # else:
-                    #     # logging.info("here")
-                    #     v_buffer[index] = torch.stack([torch.randn_like(value) if value.requires_grad else torch.zeros_like(value) for _ in range(v_num)],dim=0).to("cpu")
-                    index += 1
+        #                     # 随机向量
+        #                     r = torch.stack([torch.randn_like(target_grad) for _ in range(v_num)],dim=0)
+
+        #                     # 根据随机向量算出的垂直grad的向量
+        #                     grad_perp = r - (r@(target_grad.unsqueeze(-1)))*target_grad
+        #                     # Make it a unit vector:
+        #                     grad_perp = grad_perp / (grad_perp.norm(dim=-1)[:,None])
+
+        #                     # 算出v
+        #                     candidate_v = selected_cos*target_grad + torch.sqrt(torch.tensor(1,device=self.device) - selected_cos**2)*grad_perp
+        #                     candidate_v = candidate_v*torch.tensor((target_grad.shape[0]**0.5),device=self.device)
+
+        #                     v_shape = list(value.shape)
+        #                     v_shape.insert(0,v_num)
+        #                     v_buffer[index] = candidate_v.reshape(v_shape).to("cpu")
+        #                 # else:
+        #                 #     v_buffer[index] = torch.stack([torch.zeros_like(value) for _ in range(v_num)],dim=0).to("cpu")
+        #             # else:
+        #             #     # logging.info("here")
+        #             #     v_buffer[index] = torch.stack([torch.randn_like(value) if value.requires_grad else torch.zeros_like(value) for _ in range(v_num)],dim=0).to("cpu")
+        #             index += 1
         
         
 
@@ -162,16 +191,15 @@ class ForwardTextClassificationTrainer:
                     x = batch[1].to(device)
                     labels = batch[4].to(device)
 
-                    if self.mode_counter:
-                        if v_buffer == {}:
-                            v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
-                        else:
-                            v_params = tuple([v_buffer[i][batch_idx].to(self.device) if p.requires_grad else torch.zeros_like(p) for i,p in enumerate(self.params)])
+                    # if self.mode_counter:
+                    if self.mode_counter == 0 or v_buffer == {}:
+                        v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
                     else:
-                        tmp_v = [torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params]
-                        v_params = tuple(tmp_v[i]/tmp_v[i].norm()*(tmp_v[i].numel()**0.5) if p.requires_grad == True else tmp_v[i] for i,p in enumerate(self.params))
+                        v_params = tuple([v_buffer[i][batch_idx].to(self.device) if p.requires_grad else torch.zeros_like(p) for i,p in enumerate(self.params)])
+                    # else:
+                    #     tmp_v = [torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params]
+                    #     v_params = tuple(tmp_v[i]/tmp_v[i].norm()*(tmp_v[i].numel()**0.5) if p.requires_grad == True else tmp_v[i] for i,p in enumerate(self.params))
 
-                    # v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
 
                     f = partial(
                         functional_get_loss,
@@ -186,7 +214,6 @@ class ForwardTextClassificationTrainer:
                     # loss, jvp = fc.jvp(f, (self.params,), (v_params,))
 
                     h = 0.01
-                    v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
 
                     # loss = f(tuple(self.params))
                     with autocast():
@@ -208,11 +235,6 @@ class ForwardTextClassificationTrainer:
 
                     if self.args.is_debug_mode == 1 and global_step > 3:
                         break
-        # logging.info("load state_dict")
-        # para = self.model.state_dict()
-        # logging.info(len(para))
-        # logging.info(len(self.params))
-        
         # for i,k in enumerate(para):
         #     if self.args.model_type == "bert":
         #         if i == 0:
@@ -221,13 +243,11 @@ class ForwardTextClassificationTrainer:
         #     # logging.info(self.model.state_dict()[k] == self.params[i])
         #     else:
         #         para[k] = self.params[i]
-        
-        # self.model.load_state_dict(para)
-        # results, _, _ = self.eval_model(self.args.epochs-1, global_step)
-        # logging.info(results)
-        # self.mode_counter += 1
-        # if self.mode_counter == 2:
-        #     self.mode_counter = 0
+
+        self.mode_counter += 1
+        if self.mode_counter == 2:
+            self.mode_counter = 0
+
         return global_step, tr_loss / global_step
 
     def eval_model(self, epoch=0, global_step=0, device=None):
@@ -404,8 +424,8 @@ class ForwardTextClassificationTrainer:
         self.args.warmup_steps = warmup_steps if self.args.warmup_steps == 0 else self.args.warmup_steps
         logging.info("warmup steps = %d" % self.args.warmup_steps)
         # freeze exps only apply for distilbert
-        if self.args.model_type == "distilbert" or self.args.model_type == "bert":
-            self.freeze_model_parameters(model)
+        # if self.args.model_type == "distilbert" or self.args.model_type == "bert":
+        self.freeze_model_parameters(model)
         if self.args.fl_algorithm == "FedOPT" or self.args.fl_algorithm == "":
             optimizer = AdamW(model.parameters(), lr=self.args.learning_rate, eps=self.args.adam_epsilon)
         else:
@@ -438,10 +458,10 @@ class ForwardTextClassificationTrainer:
         #     for param in module.parameters():
         #         param.requires_grad = False
 
-        # # bitfit
-        # for n,p in model.named_parameters():
-        #     if not("bias" in n or "model.classifier" in n):
-        #         p.requires_grad = False
+        # bitfit
+        for n,p in model.named_parameters():
+            if not("bias" in n or "model.classifier" in n):
+                p.requires_grad = False
         logging.info(get_parameter_number(model))
 
 def get_parameter_number(net):
@@ -574,8 +594,8 @@ class TextClassificationTrainer:
 
                 # (loss), logits, (hidden_states), (attentions)
                 # t1 = time.time()
-                with autocast():
-                    output = self.model(x)
+                # with autocast():
+                output = self.model(x)
                 
                 logits = output[0]
 
@@ -737,8 +757,8 @@ class TextClassificationTrainer:
         self.args.warmup_steps = warmup_steps if self.args.warmup_steps == 0 else self.args.warmup_steps
         logging.info("warmup steps = %d" % self.args.warmup_steps)
         # freeze exps only apply for distilbert
-        if self.args.model_type == "distilbert" or self.args.model_type == "bert":
-            self.freeze_model_parameters(model)
+        # if self.args.model_type == "distilbert" or self.args.model_type == "bert":
+        self.freeze_model_parameters(model)
         if self.args.fl_algorithm == "FedOPT" or self.args.fl_algorithm == "":
             optimizer = AdamW(model.parameters(), lr=self.args.learning_rate, eps=self.args.adam_epsilon)
         else:
