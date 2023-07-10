@@ -24,7 +24,7 @@ model_name=bert-base-uncased
 # model_name=microsoft/deberta-xlarge
 train_batch_size=8
 DATA_NAME=agnews
-fold_name=${model_type}_${DATA_NAME}
+fold_name=adaptive/${model_type}_${DATA_NAME}
 # frequency_of_the_test=1
 
 if [ $DATA_NAME = "agnews" ];then
@@ -120,7 +120,7 @@ elif [ $FL_ALG = FedSgd ];then
     --epochs 1 \
     --use_adapter True \
     --learning_rate $LR \
-    > ./log/end2end/${fold_name}/fedsgd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_adapter_adam.log 2>&1
+    > ./log/end2end/${fold_name}/fedsgd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_full.log 2>&1
 else
   mpirun -np $PROCESS_NUM -hostfile mpi_host_file \
   python -m fedavg_main_tc \
@@ -148,7 +148,7 @@ else
     --use_adapter True \
     --forward_mode \
     --learning_rate $LR \
-    > ./log/end2end/${fold_name}/fedFwd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_numerical_check_10.log 2>&1
+    > ./log/end2end/${fold_name}/fedFwd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_numerical_adaptive_sampling_40.log 2>&1
 # fi
 # mpirun -np $PROCESS_NUM -hostfile mpi_host_file \
 # python -m fedavg_main_tc \

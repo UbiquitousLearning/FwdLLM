@@ -118,7 +118,7 @@ class ForwardTextClassificationTrainer:
                     # candidate_v = torch.stack([torch.randn_like(v,device="cpu") for _ in range(v_num*10)],dim=0)
                     shape = v.shape
                     muti_v = self.adhoc_v_num_list[self.cur_v_num_index]
-                    candidate_v = torch.randn((250*muti_v,*shape),device="cpu")
+                    candidate_v = torch.randn((v_num*100*muti_v,*shape),device="cpu")
                     target_grad = self.grad[index]
 
                     # logging.info("flatten")
@@ -130,7 +130,7 @@ class ForwardTextClassificationTrainer:
                     # sort the cosine similarity values in descending order and get the indices
                     sorted_values, sorted_indices = torch.sort(cos_sim, descending=True)
 
-                    v_buffer[index] = [candidate_v[i].reshape(v.shape) for i in sorted_indices[:v_num*muti_v]]
+                    v_buffer[index] = [candidate_v[i].reshape(v.shape) for i in sorted_indices[:v_num]]
                 # else:
                 #     v_buffer[index] = torch.stack([torch.randn_like(v) for _ in range(v_num)],dim=0)
                 index += 1
@@ -153,7 +153,7 @@ class ForwardTextClassificationTrainer:
         with torch.no_grad():
             for epoch in range(0, self.args.epochs):
                 for batch_idx, batch in enumerate(self.train_dl):
-                    for v_id in range(self.adhoc_v_num_list[self.cur_v_num_index]):
+                    for _ in range(self.adhoc_v_num_list[self.cur_v_num_index]):
                         batch = tuple(t for t in batch)
                         x = batch[1].to(device)
                         labels = batch[4].to(device)
@@ -162,7 +162,7 @@ class ForwardTextClassificationTrainer:
                         if v_buffer == {} or self.mode_counter == 0:
                             v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
                         else:
-                            v_params = tuple([v_buffer[i][v_num*v_id+batch_idx].to(self.device) if p.requires_grad else torch.zeros_like(p) for i,p in enumerate(self.params)])
+                            v_params = tuple([v_buffer[i][batch_idx].to(self.device) if p.requires_grad else torch.zeros_like(p) for i,p in enumerate(self.params)])
                         # else:
                         #     tmp_v = [torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params]
                         #     v_params = tuple(tmp_v[i]/tmp_v[i].norm()*(tmp_v[i].numel()**0.5) if p.requires_grad == True else tmp_v[i] for i,p in enumerate(self.params))
@@ -211,9 +211,9 @@ class ForwardTextClassificationTrainer:
         #     else:
         #         para[k] = self.params[i]
 
-        # self.mode_counter += 1
-        # if self.mode_counter == 2:
-        #     self.mode_counter = 0
+        self.mode_counter += 1
+        if self.mode_counter == 2:
+            self.mode_counter = 0
 
         return global_step, tr_loss / global_step
 
@@ -755,7 +755,7 @@ class TextClassificationTrainer:
         #     for param in module.parameters():
         #         param.requires_grad = False
 
-        # bitfit
+        # # bitfit
         # for n,p in model.named_parameters():
         #     if not("bias" in n or "classifier" in n):
         #         p.requires_grad = False

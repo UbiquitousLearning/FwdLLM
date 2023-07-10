@@ -95,9 +95,9 @@ def create_model(args, formulation="classification"):
     #     model.add_adapter("rotten tomato",config = adapter_config)
     #     # model.add_adapter("rotten tomato")
     #     model.train_adapter("rotten tomato")
-    #     # from torch import nn
-    #     # # nn.init.kaiming_normal_(model.classifier.weight, mode='fan_out', nonlinearity='relu')
-    #     # nn.init.xavier_normal_(model.classifier.weight,gain=1.)
+        # from torch import nn
+        # # nn.init.kaiming_normal_(model.classifier.weight, mode='fan_out', nonlinearity='relu')
+        # nn.init.xavier_normal_(model.classifier.weight,gain=1.)
 
     # from transformers.adapters import LoRAConfig
 

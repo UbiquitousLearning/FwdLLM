@@ -8,17 +8,8 @@ import numpy as np
 import torch
 import wandb
 
-from torch.optim.lr_scheduler import LambdaLR
+from .utils import transform_list_to_tensor,dequantize_params
 
-def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
-    def lr_lambda(current_step: int):
-        if current_step < num_warmup_steps:
-            return float(current_step) / float(max(1, num_warmup_steps))
-        return max(
-            0.0, float(num_training_steps - current_step) / float(max(1, num_training_steps - num_warmup_steps))
-        )
-
-    return LambdaLR(optimizer, lr_lambda, last_epoch)
 
 class FedAVGAggregator(object):
 
@@ -53,12 +44,6 @@ class FedAVGAggregator(object):
         self.previous_acc = -1
         self.previous_loss = 100
 
-        # adam optimizer
-        self.optimizer = torch.optim.Adam(self.trainer.model.parameters(),lr=self.args.learning_rate)
-        # self.scheduler = get_linear_schedule_with_warmup(
-        #     self.optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=self.args.comm_round
-        # )
-
     def get_global_model_params(self):
         return self.trainer.get_model_params()
     
@@ -88,14 +73,14 @@ class FedAVGAggregator(object):
         training_num = 0
 
         # self.warmup_rounds = 20
-        # if current_round < self.warmup_rounds:
-        #     ratio = float(current_round+1) / float(max(1, self.warmup_rounds))
-        # else:
-        #     ratio = max(
-        #     0.0, float(self.args.comm_round - current_round) / float(max(1, self.args.comm_round - self.warmup_rounds))
-        # )
-        # learning_rate = self.args.learning_rate * ratio
-        # logging.info(f"learning rate: {learning_rate}")
+        if current_round < self.warmup_rounds:
+            ratio = float(current_round+1) / float(max(1, self.warmup_rounds))
+        else:
+            ratio = max(
+            0.0, float(self.args.comm_round - current_round) / float(max(1, self.args.comm_round - self.warmup_rounds))
+        )
+        learning_rate = self.args.learning_rate * ratio
+        logging.info(f"learning rate: {learning_rate}")
 
         for idx in range(self.worker_num):
             model_list.append((self.sample_num_dict[idx], self.model_dict[idx]))
@@ -133,12 +118,7 @@ class FedAVGAggregator(object):
             # old_param[k] -= learning_rate * averaged_params[id] / training_num 
                 # if id == 22:
                 #     logging.info(sum(local_model_params[id]))
-            p = next(old_param).to("cpu")
-            g = (averaged_params[id] / training_num)  
-            p.grad = g  
-        self.optimizer.step()
-        # self.scheduler.step()
-        self.optimizer.zero_grad() 
+            next(old_param).detach().to("cpu").sub_(learning_rate * averaged_params[id] / training_num)       
 
         # 在前1000个batch上快速测试一下新模型的准确率
         # cur_model_acc = self.trainer.quick_test(self.device,500)
