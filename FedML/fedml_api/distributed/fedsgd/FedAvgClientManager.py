@@ -32,6 +32,8 @@ class FedAVGClientManager(ClientManager):
                                               self.handle_message_receive_model_from_server)
         self.register_message_receive_handler(MyMessage.MSG_TYPE_S2C_SEND_GRAD_TO_CLIENT,
                                               self.handle_message_receive_aggregated_grad_from_server)
+        self.register_message_receive_handler(MyMessage.MSG_TYPE_S2C_MORE_V,
+                                              self.calculate_more_v)
 
     def handle_message_init(self, msg_params):
         global_model_params = msg_params.get(MyMessage.MSG_ARG_KEY_MODEL_PARAMS)
@@ -71,6 +73,9 @@ class FedAVGClientManager(ClientManager):
         # ad_hoc
         # self.trainer.trainer.model_trainer.cur_v_num_index += 1
 
+        # 方差足够小，清空暂存的fwdgrad
+        self.trainer.trainer.model_trainer.grad_for_var_check_list = []
+
         self.trainer.update_model(model_params)
         self.trainer.update_dataset(client_index)
         self.round_idx += 1
@@ -85,11 +90,21 @@ class FedAVGClientManager(ClientManager):
 
     def handle_message_receive_aggregated_grad_from_server(self, msg_params):
         logging.info("handle_message_receive_aggregated_grad_from_server")
+
+        # 方差足够小，清空暂存的fwdgrad
+        self.trainer.trainer.model_trainer.grad_for_var_check_list = []
+
         model_params = msg_params.get(MyMessage.MSG_ARG_KEY_MODEL_PARAMS)
         client_index = msg_params.get(MyMessage.MSG_ARG_KEY_CLIENT_INDEX)
 
 
         self.trainer.update_model(model_params)
+        self.train_with_data_id()
+
+    # 方差太大，计算更多v
+    def calculate_more_v(self,msg_params):
+        self.data_id -= 1
+        logging.info("calculate more v")
         self.train_with_data_id()
 
     def send_model_to_server(self, receive_id, weights, local_sample_num):
@@ -104,14 +119,23 @@ class FedAVGClientManager(ClientManager):
         message.add_params(MyMessage.MSG_ARG_KEY_NUM_SAMPLES, local_sample_num)
         self.send_message(message)
 
+    def send_var_to_server(self, receive_id, var):
+        message = Message(MyMessage.MSG_TYPE_C2S_SEND_VAR_TO_SERVER, self.get_sender_id(), receive_id)
+        message.add_params("var", var)
+        self.send_message(message)
+
     def __train(self):
         logging.info("#######training########### round_id = %d" % self.round_idx)
         weights, local_sample_num = self.trainer.train(self.round_idx)
+
         self.send_model_to_server(0, weights, local_sample_num)
 
     def train_with_data_id(self):
         logging.info("#######training########### round_id = %d data_id = %d" % (self.round_idx, self.data_id))
         weights, local_sample_num = self.trainer.train_with_data_id(self.round_idx,self.data_id)
+
+        self.send_var_to_server(0,self.trainer.trainer.model_trainer.var)
+
         self.data_id += 1
         if self.data_id == len(self.trainer.train_local_list[0]):
             self.send_model_to_server(0, weights, local_sample_num)

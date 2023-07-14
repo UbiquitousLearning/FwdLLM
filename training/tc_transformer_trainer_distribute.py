@@ -57,9 +57,8 @@ class ForwardTextClassificationTrainer:
 
         self.mode_counter = 0
 
-        self.adhoc_v_num_list = [1]*10 + [3] * 3 + [5]*5 + [10]*1000
-        self.cur_v_num_index = -1
-        logging.info(f"adhoc = {self.adhoc_v_num_list}")
+        self.grad_for_var_check_list = []
+        self.layer_id_for_check = 16
 
         # self.fmodel, self.params, self.buffers = fc.make_functional_with_buffers(model)
 
@@ -67,32 +66,6 @@ class ForwardTextClassificationTrainer:
         # Used for fedtrainer
         self.train_dl = train_dl
         self.test_dl = test_dl
-    
-    def calculate_cos_sim(self,A,target_grad):
-        batch_size = 1000
-
-        # 计算总批次数
-        num_batches = math.ceil(A.size(0) / batch_size)
-
-        # 创建一个空的结果张量
-        result = torch.empty(A.size(0))
-
-        # 逐批次计算余弦相似度
-        for i in range(num_batches):
-            # 获取当前批次的起始索引和结束索引
-            start_idx = i * batch_size
-            end_idx = min((i + 1) * batch_size, A.size(0))
-
-            # 提取当前批次的向量
-            batch = A[start_idx:end_idx].to(self.device)
-
-            # 计算当前批次的余弦相似度
-            similarity = torch.cosine_similarity(batch, target_grad, dim=-1)
-
-            # 将结果保存到结果张量的对应位置
-            result[start_idx:end_idx] = similarity
-
-            return similarity
 
     def train_model(self, device=None):
         if not device:
@@ -108,113 +81,74 @@ class ForwardTextClassificationTrainer:
         self.fmodel, self.params, self.buffers = fc.make_functional_with_buffers(self.model)
 
         v_num = len(self.train_dl)
-        v_buffer = {}
-        index = 0
-        if self.mode_counter:
-            for k,v in self.model.named_parameters():
-                # logging.info(index)
-                if self.grad != None and v.requires_grad:
-                    # logging.info("generate v")
-                    # candidate_v = torch.stack([torch.randn_like(v,device="cpu") for _ in range(v_num*10)],dim=0)
-                    shape = v.shape
-                    muti_v = self.adhoc_v_num_list[self.cur_v_num_index]
-                    candidate_v = torch.randn((250*muti_v,*shape),device="cpu")
-                    target_grad = self.grad[index]
-
-                    # logging.info("flatten")
-                    target_grad = torch.flatten(target_grad)
-                    candidate_v = torch.flatten(candidate_v,start_dim=1)
-
-                    cos_sim = self.calculate_cos_sim(candidate_v,target_grad)
-                    # cos_sim = torch.cosine_similarity(target_grad, candidate_v, dim=-1).abs()
-                    # sort the cosine similarity values in descending order and get the indices
-                    sorted_values, sorted_indices = torch.sort(cos_sim, descending=True)
-
-                    v_buffer[index] = [candidate_v[i].reshape(v.shape) for i in sorted_indices[:v_num*muti_v]]
-                # else:
-                #     v_buffer[index] = torch.stack([torch.randn_like(v) for _ in range(v_num)],dim=0)
-                index += 1
 
         # training result
         global_step = 0
         tr_loss, logging_loss = 0.0, 0.0
 
-        if self.args.fl_algorithm == "FedProx":
-            global_model = copy.deepcopy(self.model)
+        v_buffer = {}
 
-        # forward_grad = [torch.zeros_like(p) for p in self.params]
-
-        # generate_v = []
-        # calculate_jvp = []
-        # calculate_grad = []
-        # optimize = []
         self.grad = [torch.zeros_like(p) for p in self.params]
 
         with torch.no_grad():
             for epoch in range(0, self.args.epochs):
                 for batch_idx, batch in enumerate(self.train_dl):
-                    for v_id in range(self.adhoc_v_num_list[self.cur_v_num_index]):
-                        batch = tuple(t for t in batch)
-                        x = batch[1].to(device)
-                        labels = batch[4].to(device)
 
-                        # if self.mode_counter:
-                        if v_buffer == {} or self.mode_counter == 0:
+                    batch = tuple(t for t in batch)
+                    x = batch[1].to(device)
+                    labels = batch[4].to(device)
+
+                    if self.mode_counter:
+                        if v_buffer == {}:
                             v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
                         else:
-                            v_params = tuple([v_buffer[i][v_num*v_id+batch_idx].to(self.device) if p.requires_grad else torch.zeros_like(p) for i,p in enumerate(self.params)])
-                        # else:
-                        #     tmp_v = [torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params]
-                        #     v_params = tuple(tmp_v[i]/tmp_v[i].norm()*(tmp_v[i].numel()**0.5) if p.requires_grad == True else tmp_v[i] for i,p in enumerate(self.params))
+                            v_params = tuple([v_buffer[i][batch_idx].to(self.device) if p.requires_grad else torch.zeros_like(p) for i,p in enumerate(self.params)])
+                    else:
+                        tmp_v = [torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params]
+                        v_params = tuple(tmp_v[i]/tmp_v[i].norm()*(tmp_v[i].numel()**0.5) if p.requires_grad == True else tmp_v[i] for i,p in enumerate(self.params))
+
+                    # v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
+
+                    f = partial(
+                        functional_get_loss,
+                        model=self.fmodel,
+                        buffers = self.buffers,
+                        num_classes = self.num_labels,
+                        x=x,
+                        t=labels,
+                    )
+
+                    # Forward AD
+                    # loss, jvp = fc.jvp(f, (self.params,), (v_params,))
+
+                    h = 0.01
+                    v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
+
+                    # loss = f(tuple(self.params))
+                    with autocast():
+                        loss = f(tuple([self.params[i]-h*v_params[i] for i in range(len(self.params))]))
+                        terbulence_loss = f(tuple([self.params[i]+h*v_params[i] for i in range(len(self.params))]))
+                    jvp = (terbulence_loss - loss)/(2*h)
+                    
+                    for j, fg in enumerate(self.grad):
+                        fg.add_(jvp*v_params[j])
+                        if j == self.layer_id_for_check:
+                            self.grad_for_var_check_list.append(jvp*v_params[j])
 
 
-                        f = partial(
-                            functional_get_loss,
-                            model=self.fmodel,
-                            buffers = self.buffers,
-                            num_classes = self.num_labels,
-                            x=x,
-                            t=labels,
-                        )
+                    current_loss = loss.item()
+                    logging.info("epoch = %d, batch_idx = %d/%d, loss = %s" % (epoch, batch_idx,
+                                                                            len(self.train_dl), current_loss))
+                    global_step += 1
+                    if self.args.evaluate_during_training and (self.args.evaluate_during_training_steps > 0
+                                                                and global_step!=0  and global_step % self.args.evaluate_during_training_steps == 0):
+                        results, _, _ = self.eval_model(epoch, global_step)
 
-                        # Forward AD
-                        # loss, jvp = fc.jvp(f, (self.params,), (v_params,))
-
-                        h = 0.01
-
-                        # loss = f(tuple(self.params))
-                        with autocast():
-                            loss = f(tuple([self.params[i]-h*v_params[i] for i in range(len(self.params))]))
-                            terbulence_loss = f(tuple([self.params[i]+h*v_params[i] for i in range(len(self.params))]))
-                        jvp = (terbulence_loss - loss)/(2*h)
-                        
-                        for j, fg in enumerate(self.grad):
-                            fg.add_(jvp*v_params[j]/self.adhoc_v_num_list[self.cur_v_num_index])
-
-
-                        current_loss = loss.item()
-                        logging.info("epoch = %d, batch_idx = %d/%d, loss = %s" % (epoch, batch_idx,
-                                                                                len(self.train_dl), current_loss))
-                        global_step += 1
-                        if self.args.evaluate_during_training and (self.args.evaluate_during_training_steps > 0
-                                                                    and global_step!=0  and global_step % self.args.evaluate_during_training_steps == 0):
-                            results, _, _ = self.eval_model(epoch, global_step)
-
-                        if self.args.is_debug_mode == 1 and global_step > 3:
-                            break
-        # for i,k in enumerate(para):
-        #     if self.args.model_type == "bert":
-        #         if i == 0:
-        #             continue
-        #         para[k] = self.params[i-1]
-        #     # logging.info(self.model.state_dict()[k] == self.params[i])
-        #     else:
-        #         para[k] = self.params[i]
-
-        # self.mode_counter += 1
-        # if self.mode_counter == 2:
-        #     self.mode_counter = 0
-
+                    if self.args.is_debug_mode == 1 and global_step > 3:
+                        break
+        self.var = self.check_var(self.grad_for_var_check_list)
+        logging.info(f"num of fwdgrad: {len(self.grad_for_var_check_list)}, var: {self.var}")
+ 
         return global_step, tr_loss / global_step
 
     def eval_model(self, epoch=0, global_step=0, device=None):
@@ -275,6 +209,19 @@ class ForwardTextClassificationTrainer:
         logging.info(self.results)
 
         return result, model_outputs, wrong
+
+    def check_var(self,fwdgrad_list):
+        n = len(fwdgrad_list)
+        # 计算前一半tensor的平均值
+        first_half_mean = torch.mean(torch.stack(fwdgrad_list[:n//2]), dim=0)
+
+        # 计算后一半tensor的平均值
+        second_half_mean = torch.mean(torch.stack(fwdgrad_list[n//2:]), dim=0)
+
+        # 计算两个平均值之间的方差
+        var = torch.var(torch.stack([first_half_mean, second_half_mean]), dim=-1).mean()
+
+        return var
     
     def quick_test(self, epoch=0, global_step=0, device=None,test_num=1000):
         
@@ -425,7 +372,7 @@ class ForwardTextClassificationTrainer:
         #     for param in module.parameters():
         #         param.requires_grad = False
 
-        # bitfit
+        # # bitfit
         # for n,p in model.named_parameters():
         #     if not("bias" in n or "model.classifier" in n):
         #         p.requires_grad = False
@@ -755,7 +702,7 @@ class TextClassificationTrainer:
         #     for param in module.parameters():
         #         param.requires_grad = False
 
-        # bitfit
+        # # bitfit
         # for n,p in model.named_parameters():
         #     if not("bias" in n or "classifier" in n):
         #         p.requires_grad = False

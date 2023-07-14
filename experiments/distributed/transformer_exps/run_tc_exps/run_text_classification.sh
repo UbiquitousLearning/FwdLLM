@@ -12,19 +12,19 @@ ROUND=3000
 WORKER_NUM=1
 # model_type=distilbert
 # model_name=distilbert-base-uncased
-model_type=bert
-model_name=bert-base-uncased
+# model_type=bert
+# model_name=bert-base-uncased
 # model_type=bert
 # model_name=bert-large-uncased
-# model_type=albert
-# model_name=albert-base-v2
+model_type=albert
+model_name=albert-base-v2
 # model_type=roberta-large
 # model_name=roberta-large
 # model_type=deberta
 # model_name=microsoft/deberta-xlarge
 train_batch_size=8
-DATA_NAME=agnews
-fold_name=adaptive/${model_type}_${DATA_NAME}
+DATA_NAME=yahoo
+fold_name=sampling/${model_type}_${DATA_NAME}
 # frequency_of_the_test=1
 
 if [ $DATA_NAME = "agnews" ];then
@@ -148,7 +148,7 @@ else
     --use_adapter True \
     --forward_mode \
     --learning_rate $LR \
-    > ./log/end2end/${fold_name}/fedFwd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_numerical_adaptive_sampling_40.log 2>&1
+    > ./log/end2end/${fold_name}/fedFwd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_numerical_var_threthod_0.16.log 2>&1
 # fi
 # mpirun -np $PROCESS_NUM -hostfile mpi_host_file \
 # python -m fedavg_main_tc \

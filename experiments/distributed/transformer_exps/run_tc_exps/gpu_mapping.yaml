@@ -43,4 +43,4 @@ mapping_a100:
 mapping_a100_2:
     g1lmd2: [2, 2, 2, 1, 1, 1, 1, 1]
 mapping_myMap:
-    host: [0, 2, 0, 0, 0, 0, 0, 0]
+    host: [0, 0, 0, 0, 2, 0, 0, 0]
