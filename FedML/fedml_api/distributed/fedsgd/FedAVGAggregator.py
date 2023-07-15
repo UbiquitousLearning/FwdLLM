@@ -44,7 +44,8 @@ class FedAVGAggregator(object):
         self.previous_acc = -1
         self.previous_loss = 100
 
-        self.var_threthod = 0.16
+        self.var_threthod = 0.15
+        self.optimizer = torch.optim.Adam(self.trainer.model.parameters(),lr=self.args.learning_rate)
 
     def get_global_model_params(self):
         return self.trainer.get_model_params()
@@ -75,14 +76,14 @@ class FedAVGAggregator(object):
         training_num = 0
 
         # self.warmup_rounds = 20
-        if current_round < self.warmup_rounds:
-            ratio = float(current_round+1) / float(max(1, self.warmup_rounds))
-        else:
-            ratio = max(
-            0.0, float(self.args.comm_round - current_round) / float(max(1, self.args.comm_round - self.warmup_rounds))
-        )
-        learning_rate = self.args.learning_rate * ratio
-        logging.info(f"learning rate: {learning_rate}")
+        # if current_round < self.warmup_rounds:
+        #     ratio = float(current_round+1) / float(max(1, self.warmup_rounds))
+        # else:
+        #     ratio = max(
+        #     0.0, float(self.args.comm_round - current_round) / float(max(1, self.args.comm_round - self.warmup_rounds))
+        # )
+        # learning_rate = self.args.learning_rate * ratio
+        # logging.info(f"learning rate: {learning_rate}")
 
         for idx in range(self.worker_num):
             model_list.append((self.sample_num_dict[idx], self.model_dict[idx]))
@@ -120,8 +121,13 @@ class FedAVGAggregator(object):
             # old_param[k] -= learning_rate * averaged_params[id] / training_num 
                 # if id == 22:
                 #     logging.info(sum(local_model_params[id]))
-            next(old_param).detach().to("cpu").sub_(learning_rate * averaged_params[id] / training_num)       
-
+            # next(old_param).detach().to("cpu").sub_(learning_rate * averaged_params[id] / training_num)       
+            p = next(old_param).to("cpu")
+            g = (averaged_params[id] / training_num)  
+            p.grad = g  
+        self.optimizer.step()
+        # self.scheduler.step()
+        self.optimizer.zero_grad() 
         # 在前1000个batch上快速测试一下新模型的准确率
         # cur_model_acc = self.trainer.quick_test(self.device,500)
         # if cur_model_acc>self.previous_acc or len(self.cached_v) >= 9:

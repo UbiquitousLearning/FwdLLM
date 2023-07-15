@@ -148,7 +148,7 @@ else
     --use_adapter True \
     --forward_mode \
     --learning_rate $LR \
-    > ./log/end2end/${fold_name}/fedFwd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_numerical_var_threthod_0.16.log 2>&1
+    > ./log/end2end/${fold_name}/fedFwd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_numerical_var_threthod_0.15_adam.log 2>&1
 # fi
 # mpirun -np $PROCESS_NUM -hostfile mpi_host_file \
 # python -m fedavg_main_tc \
