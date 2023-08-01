@@ -86,15 +86,15 @@ def create_model(args, formulation="classification"):
         tokenizer = [None, None]
         tokenizer[0] = tokenizer_class.from_pretrained(args.model_name)
         tokenizer[1]= tokenizer[0]
-    # if args.use_adapter:
-    #     adapter_config = {'original_ln_before':True, 'original_ln_after':True, 'residual_before_ln':True, 'adapter_residual_before_ln':False, 'ln_before':False, 'ln_after':False,
-    #                       'mh_adapter':False, 'output_adapter':True, 'non_linearity':'relu', 'reduction_factor': 16, 'inv_adapter':None, 'inv_adapter_reduction_factor':None,
-    #                       'cross_adapter':False, 'leave_out':[]}
-    #     # if args.model_type == "distilbert":
-    #     # adapter_config["reduction_factor"] = 16
-    #     model.add_adapter("rotten tomato",config = adapter_config)
-    #     # model.add_adapter("rotten tomato")
-    #     model.train_adapter("rotten tomato")
+    if args.use_adapter:
+        adapter_config = {'original_ln_before':True, 'original_ln_after':True, 'residual_before_ln':True, 'adapter_residual_before_ln':False, 'ln_before':False, 'ln_after':False,
+                          'mh_adapter':False, 'output_adapter':True, 'non_linearity':'relu', 'reduction_factor': 16, 'inv_adapter':None, 'inv_adapter_reduction_factor':None,
+                          'cross_adapter':False, 'leave_out':[]}
+        # if args.model_type == "distilbert":
+        # adapter_config["reduction_factor"] = 16
+        model.add_adapter("rotten tomato",config = adapter_config)
+        # model.add_adapter("rotten tomato")
+        model.train_adapter("rotten tomato")
         # from torch import nn
         # # nn.init.kaiming_normal_(model.classifier.weight, mode='fan_out', nonlinearity='relu')
         # nn.init.xavier_normal_(model.classifier.weight,gain=1.)
