@@ -78,7 +78,7 @@ for i,v in enumerate(v_num_list):
         for ratio in relative_ratio:
             time_to_acc_dict[v] = get_time_to_target_acc(target_acc,acc,time_list)
             dict1[ratio][v] = get_time_to_target_acc(target_acc*ratio,acc,time_list)
-        plt.plot(time_list, acc, linestyle=linestyle[i], color=colors[i],label=v,linewidth=lw)
+        plt.plot(time_list, acc, linestyle=linestyle[i], color=colors[i],label=f'v = {v}',linewidth=lw)
 print(time_to_acc_dict)
 print(dict1)
 for k,v in dict1.items():
@@ -99,4 +99,4 @@ plt.ylim(0,0.98)
 plt.legend(fontsize=8)
 plt.title(f"{model} {dataset}",fontsize=30)
 # plt.show()
-plt.savefig("./figure8a.png")
+plt.savefig("/data/wyz/ForwardFL-Latex/figs/design-planning-configuration_wyz.pdf", bbox_inches="tight")
