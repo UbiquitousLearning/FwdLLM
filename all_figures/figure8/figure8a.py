@@ -22,7 +22,7 @@ time_to_acc_dict ={}
 eval_frequence = 5 if dataset == "yahoo" else 1
 linestyle = [(0, ( )), (0, (3, 1,1,1,1,1)), (0, (4, 1,1,1)), (0, (1, 1)),(0, (2, 4)), (0, (5, 1)),(0,(3,1,3,1)),(0,(4,3,3,1))]*100
 colors=['r','g','b','y','c','m','k',"tan"] * 100
-lw = 3
+lw = 8
 
 def round_to_time(round,eval_frequence,comm_time,method,local_data_num,adhoc=None):
     train_time = train_time_dict[method]
@@ -78,7 +78,7 @@ for i,v in enumerate(v_num_list):
         for ratio in relative_ratio:
             time_to_acc_dict[v] = get_time_to_target_acc(target_acc,acc,time_list)
             dict1[ratio][v] = get_time_to_target_acc(target_acc*ratio,acc,time_list)
-        plt.plot(time_list, acc, linestyle=linestyle[i], color=colors[i],label=f'v = {v}',linewidth=lw)
+        plt.plot(time_list, acc, linestyle=linestyle[i], color=colors[i],label=f'{v}',linewidth=lw)
 print(time_to_acc_dict)
 print(dict1)
 for k,v in dict1.items():
@@ -90,13 +90,14 @@ for k,v in dict1.items():
     dict1[k] = new_v
 print(dict1)
 
-plt.xlabel("Time",fontsize=20)
-plt.ylabel("Acc.",fontsize=20)
-plt.xticks(size = 20)
+plt.xlabel("Time (min)",fontsize=30)
+plt.ylabel("Acc.",fontsize=30)
+plt.xticks(fontsize = 25)
 plt.xlim(0,300)
-plt.yticks(size = 20)
+plt.yticks(fontsize = 25)
 plt.ylim(0,0.98)
-plt.legend(fontsize=8)
-plt.title(f"{model} {dataset}",fontsize=30)
+plt.legend(fontsize=20,ncol=2,loc=4,bbox_to_anchor=(0.95,0.02))
+# plt.title(f"{model} {dataset}",fontsize=30)
 plt.show()
-# plt.savefig("/data/wyz/ForwardFL-Latex/figs/design-planning-configuration_wyz.pdf", bbox_inches="tight")
+# plt.savefig("./design-planning-configuration_wyz.pdf", bbox_inches="tight")
+plt.savefig("/data/wyz/ForwardFL-Latex/figs/design-planning-configuration_wyz.pdf", bbox_inches="tight")

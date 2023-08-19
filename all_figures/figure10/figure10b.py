@@ -40,10 +40,12 @@ colors = [cmap(mean) for mean in means]
 
 # 绘制条形图
 plt.bar(bins, counts, width=interval, align='edge', color=colors)
-plt.xlabel('Cosine Similarity Absolute Value')
+plt.xlabel('Absolute Value\n of Cosine Similarity',fontsize=30)
 plt.xlim(0,0.15)
-plt.ylabel('Count')
+plt.xticks([0.04,0.08,0.12,0.16],fontsize=25)
+plt.yticks(fontsize=25)
+plt.ylabel('Count',fontsize=30)
 # plt.title('figure 4b')
 plt.colorbar(ScalarMappable(cmap=cmap))
 # plt.show()
-plt.savefig("./design-sampling-statistic_wyz.pdf")
+plt.savefig("/data/wyz/ForwardFL-Latex/figs/design-sampling-statistic_wyz.pdf", bbox_inches="tight")

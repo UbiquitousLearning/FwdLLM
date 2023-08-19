@@ -5,9 +5,9 @@ from collections import defaultdict
 
 data = defaultdict(list)
 
-layer = "distilbert.transformer.layer.0.output_adapters.adapters.rotten tomato.adapter_up.weight"
+# layer = "distilbert.transformer.layer.0.output_adapters.adapters.rotten tomato.adapter_up.weight"
 # layer = "distilbert.transformer.layer.0.output_adapters.adapters.rotten tomato.adapter_down.0.weight"
-# layer = "distilbert.transformer.layer.0.output_adapters.adapters.rotten tomato.adapter_up.bias"
+layer = "distilbert.transformer.layer.4.output_adapters.adapters.rotten tomato.adapter_up.bias"
 k_list = [f"k = {k}," for k in [1,10,100,1000,10000,100000,1000000]]
 
 with open("./fedFwd_distilbert_agnews_lr0.01_client_num_1000_numerical_check_cos.log") as f:
@@ -23,12 +23,14 @@ for key in data:
 y = [data[key].mean() for key in data]
 yerr = [data[key].std() for key in data]
 # yerr = [data[key].var() for key in data]
-plt.plot(range(len(y)),y)
-plt.errorbar(range(len(y)),y,yerr,fmt='o',ecolor='r',color='b',elinewidth=2,capsize=4)
-plt.xticks(range(len(y)),[k[:-1] for k in k_list],size=8)
+plt.plot([float(k[4:-1]) for k in k_list],y,linewidth=5)
+plt.errorbar([float(k[4:-1]) for k in k_list],y,yerr,fmt='o',ecolor='r',color='black',elinewidth=5,capsize=10,markersize=10)
+plt.xticks(fontsize=25)
+plt.yticks(fontsize=25)
+plt.xscale('log')
 #fmt :   'o' ',' '.' 'x' '+' 'v' '^' '<' '>' 's' 'd' 'p'
 # plt.tital("figure 3b")
-plt.xlabel("Num of Perturbations")
-plt.ylabel("Cosine Similarity of Fwdgrad and True Grad")
+plt.xlabel("Num of Perturbations",fontsize=30)
+plt.ylabel("Cosine Similarity",fontsize=30)
 # plt.show()
-plt.savefig("./design-forward-gradient-similarity_wyz.png")
+plt.savefig("/data/wyz/ForwardFL-Latex/figs/design-forward-gradient-similarity_wyz.pdf", bbox_inches="tight")
