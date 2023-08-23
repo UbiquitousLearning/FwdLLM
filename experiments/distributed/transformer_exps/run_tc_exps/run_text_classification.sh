@@ -10,21 +10,21 @@ C_LR=0.01
 S_LR=0.1
 ROUND=3000
 WORKER_NUM=1
-# model_type=distilbert
-# model_name=distilbert-base-uncased
+model_type=distilbert
+model_name=distilbert-base-uncased
 # model_type=bert
 # model_name=bert-base-uncased
 # model_type=bert
 # model_name=bert-large-uncased
-model_type=albert
-model_name=albert-base-v2
+# model_type=albert
+# model_name=albert-base-v2
 # model_type=roberta-large
 # model_name=roberta-large
 # model_type=deberta
 # model_name=microsoft/deberta-xlarge
 train_batch_size=8
-DATA_NAME=yahoo
-fold_name=sampling/${model_type}_${DATA_NAME}
+DATA_NAME=agnews
+fold_name=${model_type}_${DATA_NAME}
 # frequency_of_the_test=1
 
 if [ $DATA_NAME = "agnews" ];then
@@ -94,7 +94,8 @@ if [ $FL_ALG = "FedAvg" ];then
     --epochs 1 \
     --use_adapter True \
     --learning_rate $LR \
-    > ./log/${fold_name}/fedavg_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}.log 2>&1
+    >/data/wyz/FedNLP/all_figures/fedavg_result/${fold_name}/fedavg_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_no_adapter.log 2>&1
+    # > ./log/${fold_name}/fedavg_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}.log 2>&1
 elif [ $FL_ALG = FedSgd ];then
   mpirun -np $PROCESS_NUM -hostfile mpi_host_file \
   python -m fedavg_main_tc \
@@ -120,7 +121,8 @@ elif [ $FL_ALG = FedSgd ];then
     --epochs 1 \
     --use_adapter True \
     --learning_rate $LR \
-    > ./log/end2end/${fold_name}/fedsgd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_full.log 2>&1
+    > /data/wyz/FedNLP/all_figures/distilbert_agnews_diff_client_num/fedsgd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}.log 2>&1
+    # > ./log/end2end/${fold_name}/fedsgd_${model_type}_${DATA_NAME}_lr${LR}_client_num_${client_num_per_round}_full.log 2>&1
 else
   mpirun -np $PROCESS_NUM -hostfile mpi_host_file \
   python -m fedavg_main_tc \

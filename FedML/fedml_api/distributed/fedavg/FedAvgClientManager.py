@@ -43,7 +43,7 @@ class FedAVGClientManager(ClientManager):
         self.round_idx = 0
         weight_list, sample_list = [], []
         for id in client_index:
-            self.trainer.update_model(global_model_params)
+            self.trainer.update_model(copy.deepcopy(global_model_params))
             self.trainer.update_dataset(id)
             logging.info("#######training########### round_id = %d" % self.round_idx)
             weights, local_sample_num = self.trainer.train(self.round_idx)
