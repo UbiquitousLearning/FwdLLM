@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-
+plt.figure(figsize=(7,4),dpi=300)
 data = defaultdict(list)
 
 # layer = "distilbert.transformer.layer.0.output_adapters.adapters.rotten tomato.adapter_up.weight"
@@ -30,7 +30,7 @@ plt.yticks(fontsize=25)
 plt.xscale('log')
 #fmt :   'o' ',' '.' 'x' '+' 'v' '^' '<' '>' 's' 'd' 'p'
 # plt.tital("figure 3b")
-plt.xlabel("Num of Perturbations",fontsize=30)
-plt.ylabel("Cosine Similarity",fontsize=30)
+plt.xlabel("#Perturbation",fontsize=30)
+plt.ylabel("Cosine Similarity   ",fontsize=30)
 # plt.show()
 plt.savefig("/data/wyz/ForwardFL-Latex/figs/design-forward-gradient-similarity_wyz.pdf", bbox_inches="tight")

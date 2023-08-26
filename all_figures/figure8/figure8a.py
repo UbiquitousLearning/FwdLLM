@@ -21,8 +21,10 @@ time_to_acc_dict ={}
 
 eval_frequence = 5 if dataset == "yahoo" else 1
 linestyle = [(0, ( )), (0, (3, 1,1,1,1,1)), (0, (4, 1,1,1)), (0, (1, 1)),(0, (2, 4)), (0, (5, 1)),(0,(3,1,3,1)),(0,(4,3,3,1))]*100
-colors=['r','g','b','y','c','m','k',"tan"] * 100
-lw = 8
+colors=['r','g','b','y','m','k',"tan"] * 100
+lw = 5
+
+plt.figure(figsize=(7,4),dpi=300)
 
 def round_to_time(round,eval_frequence,comm_time,method,local_data_num,adhoc=None):
     train_time = train_time_dict[method]
@@ -90,13 +92,13 @@ for k,v in dict1.items():
     dict1[k] = new_v
 print(dict1)
 
-plt.xlabel("Time (min)",fontsize=30)
-plt.ylabel("Acc.",fontsize=30)
-plt.xticks(fontsize = 25)
-plt.xlim(0,300)
-plt.yticks(fontsize = 25)
-plt.ylim(0,0.98)
-plt.legend(fontsize=20,ncol=2,loc=4,bbox_to_anchor=(0.95,0.02))
+plt.xlabel("Elapsed Training Time (mins)",fontsize=29)
+plt.ylabel("Accuracy",fontsize=30)
+plt.xticks(range(0,201,50),fontsize = 25)
+plt.xlim(0,200)
+plt.yticks(np.arange(0.2,1,0.2),fontsize = 25)
+plt.ylim(0.2,0.98)
+plt.legend(fontsize=20,ncol=2,loc=4,bbox_to_anchor=(0.95,-0.05),frameon=False)
 # plt.title(f"{model} {dataset}",fontsize=30)
 plt.show()
 # plt.savefig("./design-planning-configuration_wyz.pdf", bbox_inches="tight")
