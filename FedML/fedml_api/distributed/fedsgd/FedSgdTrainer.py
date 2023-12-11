@@ -1,8 +1,7 @@
-from .utils import transform_tensor_to_list,quantize_params
 import logging
 
 
-class FedAVGTrainer(object):
+class FedSGDTrainer(object):
 
     def __init__(self, client_index, train_data_local_dict, train_data_local_num_dict, test_data_local_dict,
                  train_data_num, device, args, model_trainer):
@@ -38,26 +37,15 @@ class FedAVGTrainer(object):
 
         weights = self.trainer.get_model_params()
 
-        # transform Tensor to list
-        if self.args.is_mobile == 1:
-            weights = transform_tensor_to_list(weights)
-        if self.args.use_quantize:
-            weights,self.accumulated_error = quantize_params(weights,self.accumulated_error)
-
         return weights, self.local_sample_number
     
     def train_with_data_id(self, round_idx = None, data_id = 0):
         self.args.round_idx = round_idx
+        logging.info(f"aaaaaaaaaaaaaaaaaaaaaaaaa{data_id}")
         self.trainer.train([train_local[data_id] for train_local in self.train_local_list], self.device, self.args)
 
         # weights = self.trainer.get_model_params()
         weights = [para.detach().cpu() for para in self.trainer.model_trainer.grad]
-
-        # transform Tensor to list
-        if self.args.is_mobile == 1:
-            weights = transform_tensor_to_list(weights)
-        if self.args.use_quantize:
-            weights,self.accumulated_error = quantize_params(weights,self.accumulated_error)
 
         return weights, len(self.train_local)
 

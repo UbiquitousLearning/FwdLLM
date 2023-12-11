@@ -103,7 +103,6 @@ class ForwardTextClassificationTrainer:
                     # loss = functional_get_loss(self.params,self.fmodel,x,labels,self.num_labels,self.buffers)
                     # v_params = tuple([(torch.bernoulli(torch.full_like(p,0.5,dtype=torch.float32))-0.5)*2 for p in params])
                     # t1 = time.time()
-                    v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
                     # t2 = time.time()
                     # logging.info(f"generate v use time: {t2-t1}")
                     # generate_v.append(t2-t1)
@@ -117,12 +116,21 @@ class ForwardTextClassificationTrainer:
                         t=labels,
                     )
 
-                    # t1 = time.time()
-                    # Forward AD
-                    loss, jvp = fc.jvp(f, (self.params,), (v_params,))
-                    # t2 = time.time()
-                    # logging.info(f"calculate jvp use time: {t2-t1}")
-                    # calculate_jvp.append(t2-t1)
+                    h = 0.01
+                    if batch_idx % 2 == 0:
+                        loss = f(tuple(self.params))
+                        continue
+                    v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
+                    terbulence_loss = f(tuple([self.params[i]+h*v_params[i] for i in range(len(self.params))]))
+                    jvp = (terbulence_loss - loss)/(2*h)
+
+                    # h = 0.01
+                    # v_params = tuple([torch.randn_like(p) if p.requires_grad == True else torch.zeros_like(p) for p in self.params])
+                    # with autocast():
+                    #     # loss = f(tuple([self.params[i]-h*v_params[i] for i in range(len(self.params))]))
+                    #     loss = f(tuple(self.params))
+                    #     terbulence_loss = f(tuple([self.params[i]+h*v_params[i] for i in range(len(self.params))]))
+                    # jvp = (terbulence_loss - loss)/(2*h)
 
                     # t1 = time.time()
                     for j, fg in enumerate(forward_grad):
@@ -258,7 +266,7 @@ class ForwardTextClassificationTrainer:
         )
 
     def build_optimizer(self, model, iteration_in_total):
-        warmup_steps = math.ceil(self.args.comm_round * self.args.warmup_ratio)
+        warmup_steps = math.ceil(iteration_in_total * self.args.warmup_ratio)
         self.args.warmup_steps = warmup_steps if self.args.warmup_steps == 0 else self.args.warmup_steps
         logging.info("warmup steps = %d" % self.args.warmup_steps)
         # freeze exps only apply for distilbert
@@ -269,7 +277,7 @@ class ForwardTextClassificationTrainer:
         else:
             optimizer = SGD(model.parameters(), lr=self.args.learning_rate)
         scheduler = get_linear_schedule_with_warmup(
-            optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=self.args.comm_round
+            optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=iteration_in_total
         )
         return optimizer, scheduler
     

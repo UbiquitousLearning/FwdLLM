@@ -2336,3 +2336,21 @@ AttributeError: 'TextClassificationTrainer' object has no attribute 'var'
 mpirun noticed that process rank 1 with PID 0 on node Phoenix22 exited on signal 15 (Terminated).
 --------------------------------------------------------------------------
 2
+sh: 0: Can't open run_text_classification_sweep.sh
+sh: 0: Can't open run_text_classification_sweep.sh
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2

@@ -39,6 +39,7 @@ class TLMPreprocessor(BasePreprocessor):
     def __init__(self, **kwargs):
         super(TLMPreprocessor, self).__init__(**kwargs)
         self.text_cleaner = customized_cleaner_dict.get(self.args.dataset, None)
+        # self.label_vocab = {str(i+1):i for i in range(10)}
 
     def transform(self, X, y, index_list=None, evaluate=False):
         # index_list is creat for setting guid
@@ -60,9 +61,8 @@ class TLMPreprocessor(BasePreprocessor):
     def transform_examples(self, X, y, index_list):
         # index_list is creat for setting guid
         data = [(X[i], self.label_vocab[y[i]], idx) for i, idx in enumerate(index_list)]
-
         df = pd.DataFrame(data)
-
+        print(df)
         examples = []
         for i, (text, label, guid) in enumerate(zip(df.iloc[:, 0], df.iloc[:, 1], df.iloc[:, 2])):
             if self.text_cleaner:

@@ -19,7 +19,24 @@ class TextClassificationDataManager(BaseDataManager):
     def read_instance_from_h5(self, data_file, index_list, desc=""):
         X = list()
         y = list()
-        for idx in tqdm(index_list, desc="Loading data from h5 file." + desc):
-            X.append(data_file["X"][str(idx)][()].decode("utf-8"))
-            y.append(data_file["Y"][str(idx)][()].decode("utf-8"))
+        import concurrent.futures
+        import threading
+        from tqdm import tqdm
+
+        # 定义一个函数来加载单个文件的数据
+        def load_data_from_file(idx):
+            with data_list_lock:
+                X.append(data_file["X"][str(idx)][()].decode("utf-8"))
+                y.append(data_file["Y"][str(idx)][()].decode("utf-8"))
+                pbar.update(1)
+        
+        data_list_lock = threading.Lock()  # 用于保护数据列表
+
+        # 创建一个线程池，限制同时活动的线程数量
+        # 适当调整max_workers以控制线程数量
+        max_workers = 20  # 例如，设置为4以充分利用4个CPU核心
+        with tqdm(total=len(index_list)) as pbar:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # 提交文件加载任务
+                executor.map(load_data_from_file, index_list)
         return {"X": X, "y": y}

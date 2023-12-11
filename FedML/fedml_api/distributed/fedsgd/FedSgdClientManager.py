@@ -13,9 +13,9 @@ except ImportError:
     from FedML.fedml_core.distributed.client.client_manager import ClientManager
     from FedML.fedml_core.distributed.communication.message import Message
 from .message_define import MyMessage
-from .utils import transform_list_to_tensor, post_complete_message_to_sweep_process,dequantize_params,quantize_params
+from .utils import post_complete_message_to_sweep_process, grad_aggregete
 
-class FedAVGClientManager(ClientManager):
+class FedSGDClientManager(ClientManager):
     def __init__(self, args, trainer, comm=None, rank=0, size=0, backend="MPI"):
         super().__init__(args, comm, rank, size, backend)
         self.trainer = trainer
@@ -32,16 +32,13 @@ class FedAVGClientManager(ClientManager):
                                               self.handle_message_receive_model_from_server)
         self.register_message_receive_handler(MyMessage.MSG_TYPE_S2C_SEND_GRAD_TO_CLIENT,
                                               self.handle_message_receive_aggregated_grad_from_server)
+        self.register_message_receive_handler(MyMessage.MSG_TYPE_S2C_MORE_V,
+                                              self.calculate_more_v)
 
     def handle_message_init(self, msg_params):
         global_model_params = msg_params.get(MyMessage.MSG_ARG_KEY_MODEL_PARAMS)
         client_index = msg_params.get(MyMessage.MSG_ARG_KEY_CLIENT_INDEX)
 
-        if self.args.is_mobile == 1:
-            global_model_params = transform_list_to_tensor(global_model_params)
-        
-        # global_model_params = dequantize_params(global_model_params)
-        
         # ad_hoc
         # self.trainer.trainer.model_trainer.cur_v_num_index += 1
 
@@ -61,15 +58,14 @@ class FedAVGClientManager(ClientManager):
         model_params = msg_params.get(MyMessage.MSG_ARG_KEY_MODEL_PARAMS)
         client_index = msg_params.get(MyMessage.MSG_ARG_KEY_CLIENT_INDEX)
 
-        if self.args.is_mobile == 1:
-            model_params = transform_list_to_tensor(model_params)
-        if self.args.use_quantize:
-            model_params = dequantize_params(model_params)
-            # for k in model_params.keys():
-            #     model_params[k] = self.compressor.decompress(model_params[k][0],model_params[k][1])
-
         # ad_hoc
         # self.trainer.trainer.model_trainer.cur_v_num_index += 1
+        # 方差足够小，清空暂存的fwdgrad
+        if self.args.var_control:
+            if self.args.perturbation_sampling:
+                self.trainer.trainer.model_trainer.old_grad = grad_aggregete(self.trainer.trainer.model_trainer.grad_pool)
+            self.trainer.trainer.model_trainer.grad_for_var_check_list = []
+
 
         self.trainer.update_model(model_params)
         self.trainer.update_dataset(client_index)
@@ -85,11 +81,24 @@ class FedAVGClientManager(ClientManager):
 
     def handle_message_receive_aggregated_grad_from_server(self, msg_params):
         logging.info("handle_message_receive_aggregated_grad_from_server")
+        
+        # 方差足够小，清空暂存的fwdgrad
+        if self.args.var_control:
+            if self.args.perturbation_sampling:
+                self.trainer.trainer.model_trainer.old_grad = grad_aggregete(self.trainer.trainer.model_trainer.grad_pool)
+                self.trainer.trainer.model_trainer.grad_pool = []
+            self.trainer.trainer.model_trainer.grad_for_var_check_list = []
+
         model_params = msg_params.get(MyMessage.MSG_ARG_KEY_MODEL_PARAMS)
         client_index = msg_params.get(MyMessage.MSG_ARG_KEY_CLIENT_INDEX)
 
-
         self.trainer.update_model(model_params)
+        self.train_with_data_id()
+
+    # 方差太大，计算更多v
+    def calculate_more_v(self,msg_params):
+        self.data_id -= 1
+        logging.info("calculate more v")
         self.train_with_data_id()
 
     def send_model_to_server(self, receive_id, weights, local_sample_num):
@@ -104,6 +113,11 @@ class FedAVGClientManager(ClientManager):
         message.add_params(MyMessage.MSG_ARG_KEY_NUM_SAMPLES, local_sample_num)
         self.send_message(message)
 
+    def send_var_to_server(self, receive_id, var):
+        message = Message(MyMessage.MSG_TYPE_C2S_SEND_VAR_TO_SERVER, self.get_sender_id(), receive_id)
+        message.add_params("var", var)
+        self.send_message(message)
+
     def __train(self):
         logging.info("#######training########### round_id = %d" % self.round_idx)
         weights, local_sample_num = self.trainer.train(self.round_idx)
@@ -111,9 +125,13 @@ class FedAVGClientManager(ClientManager):
 
     def train_with_data_id(self):
         logging.info("#######training########### round_id = %d data_id = %d" % (self.round_idx, self.data_id))
-        weights, local_sample_num = self.trainer.train_with_data_id(self.round_idx,self.data_id)
+        
+        weights, client_num = self.trainer.train_with_data_id(self.round_idx,self.data_id)
+        if self.args.var_control:
+            self.send_var_to_server(0,self.trainer.trainer.model_trainer.var)
+        
         self.data_id += 1
         if self.data_id == len(self.trainer.train_local_list[0]):
-            self.send_model_to_server(0, weights, local_sample_num)
+            self.send_model_to_server(0, weights, client_num)
         else:
-            self.send_grad_to_server(0, weights, local_sample_num)
+            self.send_grad_to_server(0, weights, client_num)

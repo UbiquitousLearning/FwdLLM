@@ -17,7 +17,7 @@ from training.fed_trainer_transformer import FedTransformerTrainer
 from data_preprocessing.text_classification_preprocessor import TLMPreprocessor
 # from training.tc_transformer_trainer_distribute import TextClassificationTrainer, ForwardTextClassificationTrainer
 from training.tc_transformer_trainer import TextClassificationTrainer
-from training.tc_transformer_trainer_distribute import ForwardTextClassificationTrainer
+from forward_training.tc_transformer_trainer_distribute import ForwardTextClassificationTrainer
 from training.tc_transformer_trainer_distribute import TextClassificationTrainer as SgdTextClassificationTrainer
 from model.transformer.model_args import ClassificationArgs
 from data_manager.text_classification_data_manager import TextClassificationDataManager
@@ -122,9 +122,11 @@ if __name__ == "__main__":
                                  "output_dir": args.output_dir,
                                  "is_debug_mode": args.is_debug_mode,
                                  "fedprox_mu": args.fedprox_mu,
-                                 "use_quantize": args.use_quantize,
                                  "use_adapter": args.use_adapter,
-                                 "comm_round": args.comm_round
+                                 "comm_round": args.comm_round,
+                                 "peft_method":args.peft_method,
+                                 "var_control":args.var_control,
+                                 "perturbation_sampling":args.perturbation_sampling,
                                  })
     model_args.config["num_labels"] = num_labels
     model_config, client_model, tokenizer = create_model(

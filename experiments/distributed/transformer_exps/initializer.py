@@ -31,9 +31,8 @@ from transformers import (
 from FedML.fedml_api.distributed.fedavg.FedAvgAPI import FedML_FedAvg_distributed
 from FedML.fedml_api.distributed.fedopt.FedOptAPI import FedML_FedOpt_distributed
 from FedML.fedml_api.distributed.fedprox.FedProxAPI import FedML_FedProx_distributed
-from FedML.fedml_api.distributed.fedsgd.FedAvgAPI import FedML_FedAvg_distributed as FedML_FedSgd_distributed
-# from model.transformer.bert_model import BertForSequenceClassification
-# from model.transformer.distilbert_model import DistilBertForSequenceClassification
+from FedML.fedml_api.distributed.fedsgd.FedSgdAPI import FedML_FedSgd_distributed
+from transformers.adapters import LoRAConfig
 
 
 def get_fl_algorithm_initializer(alg_name):
@@ -86,29 +85,26 @@ def create_model(args, formulation="classification"):
         tokenizer = [None, None]
         tokenizer[0] = tokenizer_class.from_pretrained(args.model_name)
         tokenizer[1]= tokenizer[0]
-    # if args.use_adapter:
-    #     adapter_config = {'original_ln_before':True, 'original_ln_after':True, 'residual_before_ln':True, 'adapter_residual_before_ln':False, 'ln_before':False, 'ln_after':False,
-    #                       'mh_adapter':False, 'output_adapter':True, 'non_linearity':'relu', 'reduction_factor': 16, 'inv_adapter':None, 'inv_adapter_reduction_factor':None,
-    #                       'cross_adapter':False, 'leave_out':[]}
-    #     # if args.model_type == "distilbert":
-    #     # adapter_config["reduction_factor"] = 16
-    #     model.add_adapter("rotten tomato",config = adapter_config)
-    #     # model.add_adapter("rotten tomato")
-    #     model.train_adapter("rotten tomato")
-        # from torch import nn
-        # # nn.init.kaiming_normal_(model.classifier.weight, mode='fan_out', nonlinearity='relu')
-        # nn.init.xavier_normal_(model.classifier.weight,gain=1.)
-
-    # from transformers.adapters import LoRAConfig
-
-    # config = LoRAConfig(r=8, alpha=16)
-    # model.add_adapter("lora_adapter", config=config)
-    # model.train_adapter("lora_adapter")
-
+    print('befor lorabefor lora befor lora befor lora befor lora')
     print(model)
+    if args.peft_method == 'adapter':
+        adapter_config = {'original_ln_before':True, 'original_ln_after':True, 'residual_before_ln':True, 'adapter_residual_before_ln':False, 'ln_before':False, 'ln_after':False,
+                          'mh_adapter':False, 'output_adapter':True, 'non_linearity':'relu', 'reduction_factor': 16, 'inv_adapter':None, 'inv_adapter_reduction_factor':None,
+                          'cross_adapter':False, 'leave_out':[]}
+        model.add_adapter("rotten tomato",config = adapter_config)
+        model.train_adapter("rotten tomato")
+    elif args.peft_method == 'lora':
+        config = LoRAConfig(r=8, alpha=16)
+        model.add_adapter("lora_adapter", config=config)
+        model.train_adapter("lora_adapter")
+    elif args.peft_method == 'bitfit':
+        for n,p in model.named_parameters():
+            if not("bias" in n or "classifier" in n):
+                p.requires_grad = False
+    print("after lora after lora after lora after lora after lora")
+    print(model)
+    print(sum(p.numel() for p in model.parameters() if p.requires_grad))
 
-    # state_dict = torch.load("/data/wyz/FedNLP/best_model_state_dict")
-    # model.load_state_dict(state_dict,strict=False)
     return config, model, tokenizer
 
 
@@ -251,9 +247,6 @@ def add_federated_args(parser):
     parser.add_argument('--freeze_layers', type=str, default='', metavar='N',
                         help='freeze which layers')
 
-    parser.add_argument('--use_quantize', type=bool, default=False, metavar='N',
-                        help='use_quantize')
-
     parser.add_argument('--use_adapter', type=bool, default=False, metavar='N',
                         help='use_adapter')
     
@@ -263,5 +256,13 @@ def add_federated_args(parser):
                         help='learning_rate')
     parser.add_argument('--worker_num', type=int, default=1,
                         help='worker_num')
+    parser.add_argument('--peft_method', type=str, default='full',
+                        help='peft_method')
+
+    parser.add_argument('--var_control', action='store_true',
+                        help='whether var_control')
+    
+    parser.add_argument('--perturbation_sampling', action='store_true',
+                        help='whether perturbation_sampling')
 
     return parser

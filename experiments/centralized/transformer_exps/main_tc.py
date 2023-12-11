@@ -19,7 +19,7 @@ from data_manager.text_classification_data_manager import TextClassificationData
 
 from model.transformer.model_args import ClassificationArgs
 
-from training.tc_transformer_trainer_albert import TextClassificationTrainer,ForwardTextClassificationTrainer
+from training.tc_transformer_trainer import TextClassificationTrainer,ForwardTextClassificationTrainer
 
 from experiments.centralized.transformer_exps.initializer import set_seed, add_centralized_args, create_model
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     set_seed(args.manual_seed)
 
     # device
-    device = torch.device("cuda:5")
+    device = torch.device("cuda:0")
 
     # # initialize the wandb machine learning experimental tracking platform (https://wandb.ai/automl/fednlp).
     # wandb.init(project="fednlp", entity="automl", name="FedNLP-Centralized" +
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     model_args.config["num_labels"] = num_labels
     model_config, model, tokenizer = create_model(model_args, formulation="classification")
-
+    
     # preprocessor
     preprocessor = TLMPreprocessor(args=model_args, label_vocab=attributes["label_vocab"], tokenizer=tokenizer)
 

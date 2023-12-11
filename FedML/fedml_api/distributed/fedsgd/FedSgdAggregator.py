@@ -8,10 +8,7 @@ import numpy as np
 import torch
 import wandb
 
-from .utils import transform_list_to_tensor,dequantize_params
-
-
-class FedAVGAggregator(object):
+class FedSGDAggregator(object):
 
     def __init__(self, train_global, test_global, all_train_data_num,
                  train_data_local_dict, test_data_local_dict, train_data_local_num_dict, worker_num, device,
@@ -40,12 +37,10 @@ class FedAVGAggregator(object):
 
         # 之前的v不够，暂存在cached_v
         self.cached_v = []
-        # 模型之前的准确率
-        self.previous_acc = -1
-        self.previous_loss = 100
-
-        self.var_threthod = 0.15
-        self.optimizer = torch.optim.Adam(self.trainer.model.parameters(),lr=self.args.learning_rate)
+        if self.args.model_type == "distilbert":
+            self.var_threthod = 0.05
+        elif self.args.model_type == "bert":
+            self.var_threthod = 0.6
 
     def get_global_model_params(self):
         return self.trainer.get_model_params()
@@ -76,29 +71,30 @@ class FedAVGAggregator(object):
         training_num = 0
 
         # self.warmup_rounds = 20
-        # if current_round < self.warmup_rounds:
-        #     ratio = float(current_round+1) / float(max(1, self.warmup_rounds))
-        # else:
-        #     ratio = max(
-        #     0.0, float(self.args.comm_round - current_round) / float(max(1, self.args.comm_round - self.warmup_rounds))
-        # )
-        # learning_rate = self.args.learning_rate * ratio
-        # logging.info(f"learning rate: {learning_rate}")
+        if current_round < self.warmup_rounds:
+            ratio = float(current_round+1) / float(max(1, self.warmup_rounds))
+        else:
+            ratio = max(
+            0.0, float(self.args.comm_round - current_round) / float(max(1, self.args.comm_round - self.warmup_rounds))
+        )
+        learning_rate = self.args.learning_rate * ratio
+        logging.info(f"learning rate: {learning_rate}")
 
         for idx in range(self.worker_num):
             model_list.append((self.sample_num_dict[idx], self.model_dict[idx]))
             training_num += self.sample_num_dict[idx]
         
         # self.model_dict在聚合的过程中会被改变,很奇怪，这里先存一个deepcopy吧，用于后面cache_v
-        model_dict_cached = copy.deepcopy(self.model_dict)
-        origin_param = copy.deepcopy(self.get_global_model_params())
+        if self.args.var_control:
+            model_dict_cached = copy.deepcopy(self.model_dict)
+            origin_param = copy.deepcopy(self.get_global_model_params())
 
-        # cached_v:  (num, params)
-        logging.info(f"len of cached v: {len(self.cached_v)}")
-        for cached_v in self.cached_v:
-            model_list.append(cached_v)
-            training_num += cached_v[0]
-        logging.info(f"training_num : {training_num}")
+            # cached_v:  (num, params)
+            logging.info(f"len of cached v: {len(self.cached_v)}")
+            for cached_v in self.cached_v:
+                model_list.append(cached_v)
+                training_num += cached_v[0]
+            logging.info(f"training_num : {training_num}")
 
         logging.info("len of self.model_dict[idx] = " + str(len(self.model_dict)))
         
@@ -115,40 +111,18 @@ class FedAVGAggregator(object):
                     averaged_params[id] = local_model_params[id]
                 else:
                     averaged_params[id] += local_model_params[id]
-            # logging.info(averaged_params[id].device)
-            # logging.info(self.args.learning_rate.device)
-            # logging.info(training_num .device)
-            # old_param[k] -= learning_rate * averaged_params[id] / training_num 
-                # if id == 22:
-                #     logging.info(sum(local_model_params[id]))
-            # next(old_param).detach().to("cpu").sub_(learning_rate * averaged_params[id] / training_num)       
-            p = next(old_param).to("cpu")
-            g = (averaged_params[id] / training_num)  
-            p.grad = g  
-        self.optimizer.step()
-        # self.scheduler.step()
-        self.optimizer.zero_grad() 
-        # 在前1000个batch上快速测试一下新模型的准确率
-        # cur_model_acc = self.trainer.quick_test(self.device,500)
-        # if cur_model_acc>self.previous_acc or len(self.cached_v) >= 9:
-        #     # 当前模型更好,清空cached_v,更新cur_acc
-        #     self.cached_v = []
-        #     self.previous_acc = cur_model_acc
-        # cur_model_loss = self.trainer.quick_test_loss(self.device,500)
-        # if cur_model_loss<self.previous_loss:
-        #     # 当前模型更好,清空cached_v,更新cur_acc
-        #     self.cached_v = []
-        #     self.previous_loss = cur_model_loss
-        if self.var <= self.var_threthod:
-            # 方差满足要求
-            self.cached_v = []
-        else:
-            logging.info("current model is not good enough, calculate more v")
-            # 当前模型不行，v不够，暂存起来，后面再计算更多的v
-            for idx in range(self.worker_num):
-                self.cached_v.append((self.sample_num_dict[idx], model_dict_cached[idx]))
-            # 模型改回去
-            self.set_global_model_params(origin_param)
+            next(old_param).detach().to("cpu").sub_(learning_rate * averaged_params[id] / training_num)       
+        if self.args.var_control:
+            if self.var <= self.var_threthod:
+                # 方差满足要求
+                self.cached_v = []
+            else:
+                logging.info("current model is not good enough, calculate more v")
+                # 当前模型不行，v不够，暂存起来，后面再计算更多的v
+                for idx in range(self.worker_num):
+                    self.cached_v.append((self.sample_num_dict[idx], model_dict_cached[idx]))
+                # 模型改回去
+                self.set_global_model_params(origin_param)
 
         old_param = self.get_global_model_params()
 

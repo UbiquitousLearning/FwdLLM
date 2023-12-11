@@ -92,7 +92,7 @@ class ForwardTextClassificationTrainer:
             # 将结果保存到结果张量的对应位置
             result[start_idx:end_idx] = similarity
 
-            return similarity
+        return similarity
 
     def train_model(self, device=None):
         if not device:

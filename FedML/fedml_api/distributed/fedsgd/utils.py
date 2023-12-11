@@ -33,82 +33,16 @@ def post_complete_message_to_sweep_process(args):
     with os.fdopen(pipe_fd, 'w') as pipe:
         pipe.write("training is finished! \n%s\n" % (str(args)))
 
-# def quantize_params(model_params_list,accumulated_error=None):
-    
-#     for k in model_params_list.keys():
-#         if "position_ids" not in k and "embeddings" not in k and "0" not in k and "1" not in k and "2" not in k and "3" not in k and "4" not in k and "5" not in k and "6" not in k and "7" not in k and "8" not in k and "9" not in k:
-#         # if "position_ids" not in k:
-#         #     model_params_list[k] = quantize_tensor(model_params_list[k])
-#         # else:
-#             model_params_list[k],accumulated_error = quantize_tensor(model_params_list[k])
-#         # if "weight" in k and "LayerNorm" not in k and "layer_norm" not in k and "embedding" not in k:
-#         #     model_params_list[k] = quantize_tensor_with_bucket(model_params_list[k])
-#         # model_params_list[k] = quantize_tensor(model_params_list[k])
-#     return model_params_list,accumulated_error
-def quantize_params(model_params_list,accumulated_error=None):
-    if accumulated_error is None:
-        accumulated_error = {}
-        for k in model_params_list.keys():
-            if "position_ids" not in k and "embeddings" not in k and "0" not in k and "1" not in k and "2" not in k and "3" not in k and "4" not in k and "5" not in k and "6" not in k and "7" not in k and "8" not in k and "9" not in k:
-            # if "position_ids" not in k and "embeddings" not in k and "0" not in k and "1" not in k and "2" not in k and "3" not in k and "4" not in k and "5" not in k:
-            # if "position_ids" not in k:    
-                model_params_list[k],error = quantize_tensor(model_params_list[k])
-                accumulated_error[k] = error
-    else:   
-        for k in model_params_list.keys():
-            if "position_ids" not in k and "embeddings" not in k and "0" not in k and "1" not in k and "2" not in k and "3" not in k and "4" not in k and "5" not in k and "6" not in k and "7" not in k and "8" not in k and "9" not in k:
-            # if "position_ids" not in k and "embeddings" not in k and "0" not in k and "1" not in k and "2" not in k and "3" not in k and "4" not in k and "5" not in k:
-            # if "position_ids" not in k:    
-                model_params_list[k],error = quantize_tensor(model_params_list[k]+accumulated_error[k])
-                accumulated_error[k] = error
-    return model_params_list,accumulated_error
 
-def dequantize_params(model_params_list):
-    for k in list(model_params_list.keys()):
-        if "position_ids" not in k and "embeddings" not in k and "0" not in k and "1" not in k and "2" not in k and "3" not in k and "4" not in k and "5" not in k and "6" not in k and "7" not in k and "8" not in k and "9" not in k:
-        # if "position_ids" not in k and "embeddings" not in k and "0" not in k and "1" not in k and "2" not in k and "3" not in k and "4" not in k and "5" not in k:
-        # if "position_ids" not in k:
-    #   if "weight" in k and "LayerNorm" not in k and "layer_norm" not in k and "embedding" not in k:
-    #         model_params_list[k] = dequantize_tensor_with_bucket(model_params_list[k])
-            model_params_list[k] = dequantize(model_params_list[k])
-    return model_params_list
-
-class quantized_tensor:
-    def __init__(self,data,scale,zero_point) -> None:
-        self.data = data
-        self.scale = scale
-        self.zero_point = zero_point
-
-
-def quantize_tensor(data):
-    scale = (data.max() - data.min())/14
-    zero_point = (data.max() + data.min())/2
-    quantized_data = torch.round(((data-torch.full_like(data,zero_point))/torch.full_like(data,scale)))
-    accumulated_error = data-(quantized_data*scale+zero_point)
-    quantized_data = quantized_data.type(torch.int8)
-    return quantized_tensor(quantized_data,scale,zero_point),accumulated_error
-
-# def quantize_tensor16(data):
-#     scale = (data.max() - data.min())/65534
-#     zero_point = (data.max() + data.min())/2
-#     data = torch.round(((data-torch.full_like(data,zero_point))/torch.full_like(data,scale))).type(torch.int16)
-#     return quantized_tensor(data,scale,zero_point)
-
-def dequantize(qt):
-    # return qt.data.type(torch.float32)*torch.full_like(qt.data,qt.scale,dtype=torch.float32)+torch.full_like(qt.data,qt.zero_point,dtype=torch.float32)
-    return qt.data.type(torch.float32)*qt.scale+qt.zero_point
-
-class quantized_tensor_with_bucket:
-    def __init__(self,data,size) -> None:
-        self.data = data
-        self.size = size
-
-def quantize_tensor_with_bucket(data):
-    size = data.size()
-    data = [quantize_tensor(d) for d in data.view(-1,512)]
-    return quantized_tensor_with_bucket(data,size)
-
-def dequantize_tensor_with_bucket(data):
-    size = data.size
-    data = data.data
-    return torch.stack([dequantize(d) for d in data]).view(size)
+def grad_aggregete(grad_list):
+    if len(grad_list) == 1:
+        return grad_list[0]
+    else:
+        grad = grad_list[0]
+        for id,k in enumerate(grad):
+            for i in range(0, len(grad_list)):
+                if i == 0:
+                    grad[id] = grad_list[i][id]
+                else:
+                    grad[id] += grad_list[i][id]
+        return grad

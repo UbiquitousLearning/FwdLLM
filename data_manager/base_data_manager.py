@@ -120,7 +120,6 @@ class BaseDataManager(ABC):
             
             with open(res, "wb") as handle:
                 pickle.dump((train_examples, train_features, train_dataset, test_examples, test_features, test_dataset), handle)
-
         train_dl = BaseDataLoader(train_examples, train_features, train_dataset,
                               batch_size=self.train_batch_size,
                               num_workers=0,
@@ -353,7 +352,6 @@ class BaseDataManager(ABC):
             model_args.cache_dir, args.model_type + "_" + args.model_name.split("/")[-1] + "_cached_" + str(args.max_seq_length) + "_" + model_args.model_class + "_" 
             + args.dataset + "_" + args.partition_method + "_" + str(client_id)
         )
-
         if os.path.exists(cached_features_file) and (
             (not model_args.reprocess_input_data and not model_args.no_cache)
             or (model_args.use_cached_eval_features and not model_args.no_cache)
