@@ -38,9 +38,11 @@ class FedSGDAggregator(object):
         # 之前的v不够，暂存在cached_v
         self.cached_v = []
         if self.args.model_type == "distilbert":
-            self.var_threthod = 0.05
+            # self.var_threthod = 0.25
+            self.var_threthod = 0.1
         elif self.args.model_type == "bert":
-            self.var_threthod = 0.6
+            # self.var_threthod = 0.6
+            self.var_threthod = 0.2
 
     def get_global_model_params(self):
         return self.trainer.get_model_params()

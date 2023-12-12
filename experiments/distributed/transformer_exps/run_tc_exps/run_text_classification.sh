@@ -6,10 +6,10 @@ C_LR=0.01
 S_LR=0.1
 ROUND=3000
 WORKER_NUM=1
-model_type=distilbert
-model_name=distilbert-base-uncased
-# model_type=bert
-# model_name=bert-base-uncased
+# model_type=distilbert
+# model_name=distilbert-base-uncased
+model_type=bert
+model_name=bert-base-uncased
 # model_type=bert
 # model_name=bert-large-uncased
 # model_type=albert
@@ -19,8 +19,14 @@ model_name=distilbert-base-uncased
 # model_type=deberta
 # model_name=microsoft/deberta-xlarge
 train_batch_size=8
-DATA_NAME=yahoo
+DATA_NAME=yelp-p
 # fold_name=${model_type}_${DATA_NAME}
+
+if [ $model_type = "distilbert" ];then
+  peft_method=adapter
+else
+  peft_method=bitfit
+fi
 
 PARTITION_METHOD="uniform_client_1000"
 if [ $DATA_NAME = "agnews" ];then
@@ -127,7 +133,7 @@ else
     --server_lr $S_LR \
     --worker_num $WORKER_NUM \
     --epochs 1 \
-    --peft_method bitfit \
+    --peft_method $peft_method \
     --forward_mode \
     --learning_rate $LR \
     --var_control \

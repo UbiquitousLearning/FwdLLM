@@ -47,7 +47,9 @@ data/text_classification/shakespeare/train
 data/text_classification/shakespeare/test
 data/stackoverflow/datasets
 
-data/
+# data/
+FedML/data/
+experiments/distributed/transformer_exps/run_cv_exps/data/
 
 # android
 .gradle

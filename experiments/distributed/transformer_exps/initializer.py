@@ -34,6 +34,8 @@ from FedML.fedml_api.distributed.fedprox.FedProxAPI import FedML_FedProx_distrib
 from FedML.fedml_api.distributed.fedsgd.FedSgdAPI import FedML_FedSgd_distributed
 from transformers.adapters import LoRAConfig
 
+import logging
+
 
 def get_fl_algorithm_initializer(alg_name):
     if alg_name == "FedAvg":
@@ -87,6 +89,7 @@ def create_model(args, formulation="classification"):
         tokenizer[1]= tokenizer[0]
     print('befor lorabefor lora befor lora befor lora befor lora')
     print(model)
+    logging.info(f"peft_method: {args.peft_method}")
     if args.peft_method == 'adapter':
         adapter_config = {'original_ln_before':True, 'original_ln_after':True, 'residual_before_ln':True, 'adapter_residual_before_ln':False, 'ln_before':False, 'ln_after':False,
                           'mh_adapter':False, 'output_adapter':True, 'non_linearity':'relu', 'reduction_factor': 16, 'inv_adapter':None, 'inv_adapter_reduction_factor':None,

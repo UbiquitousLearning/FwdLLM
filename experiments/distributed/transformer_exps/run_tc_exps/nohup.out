@@ -2354,3 +2354,23 @@ sh: 0: Can't open run_text_classification_sweep.sh
 2
 2
 2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+2
+run_text_classification.sh: 142: run_text_classification.sh: Syntax error: end of file unexpected (expecting "fi")
+2
+2
+2
+2
+2
+2
+2
+2

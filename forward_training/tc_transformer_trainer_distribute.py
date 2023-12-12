@@ -205,6 +205,26 @@ class ForwardTextClassificationTrainer:
         logging.info(self.results)
 
         return result, model_outputs, wrong
+    
+    def compute_metrics(self, preds, labels, eval_examples=None):
+        assert len(preds) == len(labels)
+
+        extra_metrics = {}
+        extra_metrics["acc"] = sklearn.metrics.accuracy_score(labels, preds)
+        mismatched = labels != preds
+
+        if eval_examples:
+            wrong = [i for (i, v) in zip(eval_examples, mismatched) if v.any()]
+        else:
+            wrong = ["NA"]
+
+        mcc = matthews_corrcoef(labels, preds)
+
+        tn, fp, fn, tp = confusion_matrix(labels, preds, labels=[0, 1]).ravel()
+        return (
+            {**{"mcc": mcc, "tp": tp, "tn": tn, "fp": fp, "fn": fn}, **extra_metrics},
+            wrong,
+        )
 
 def get_parameter_number(net):
     total_num = sum(p.numel() for p in net.parameters())
