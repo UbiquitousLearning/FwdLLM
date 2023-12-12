@@ -59,7 +59,7 @@ fedml_mobile/android/fedml-iot-sdk/build
 fedml_mobile/android/build
 
 mimiconda.sh
-
+mpi_host_file
 
 data/fednlp/*
 

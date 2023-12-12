@@ -63,7 +63,11 @@ class FedSGDClientManager(ClientManager):
         # 方差足够小，清空暂存的fwdgrad
         if self.args.var_control:
             if self.args.perturbation_sampling:
-                self.trainer.trainer.model_trainer.old_grad = grad_aggregete(self.trainer.trainer.model_trainer.grad_pool)
+                if self.data_id % 2:
+                    self.trainer.trainer.model_trainer.old_grad = grad_aggregete(self.trainer.trainer.model_trainer.grad_pool)
+                else:
+                    self.trainer.trainer.model_trainer.old_grad = None
+                self.trainer.trainer.model_trainer.grad_pool = []
             self.trainer.trainer.model_trainer.grad_for_var_check_list = []
 
 
@@ -85,7 +89,10 @@ class FedSGDClientManager(ClientManager):
         # 方差足够小，清空暂存的fwdgrad
         if self.args.var_control:
             if self.args.perturbation_sampling:
-                self.trainer.trainer.model_trainer.old_grad = grad_aggregete(self.trainer.trainer.model_trainer.grad_pool)
+                if self.data_id % 2:
+                    self.trainer.trainer.model_trainer.old_grad = grad_aggregete(self.trainer.trainer.model_trainer.grad_pool)
+                else:
+                    self.trainer.trainer.model_trainer.old_grad = None
                 self.trainer.trainer.model_trainer.grad_pool = []
             self.trainer.trainer.model_trainer.grad_for_var_check_list = []
 

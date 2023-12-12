@@ -48,7 +48,6 @@ class ForwardTextClassificationTrainer:
             self.old_grad = None
             self.grad_pool = []
 
-        self.mode_counter = 0
 
         # var control
         self.grad_for_var_check_list = []
