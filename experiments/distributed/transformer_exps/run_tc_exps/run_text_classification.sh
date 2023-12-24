@@ -19,7 +19,7 @@ model_name=distilbert-base-uncased
 # model_type=deberta
 # model_name=microsoft/deberta-xlarge
 train_batch_size=8
-DATA_NAME=yahoo
+DATA_NAME=agnews
 # fold_name=${model_type}_${DATA_NAME}
 
 if [ $model_type = "distilbert" ];then
@@ -51,7 +51,7 @@ fi
 LOG_FILE="fedavg_transformer_tc.log"
 CI=0
 
-DATA_DIR=/data/wyz/fednlp_data/
+DATA_DIR=../../../../fednlp_data
 
 PROCESS_NUM=`expr $WORKER_NUM + 1`
 echo $PROCESS_NUM

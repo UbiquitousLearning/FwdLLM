@@ -80,7 +80,7 @@ for i,v in enumerate(v_num_list):
         for ratio in relative_ratio:
             time_to_acc_dict[v] = get_time_to_target_acc(target_acc,acc,time_list)
             dict1[ratio][v] = get_time_to_target_acc(target_acc*ratio,acc,time_list)
-        plt.plot(time_list, acc, linestyle=linestyle[i], color=colors[i],label=f'{v}',linewidth=lw)
+        plt.plot(time_list, acc, linestyle=linestyle[i], color=colors[i],label=f'{v*10}',linewidth=lw)
 print(time_to_acc_dict)
 print(dict1)
 for k,v in dict1.items():

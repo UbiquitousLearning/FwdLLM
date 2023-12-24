@@ -55,6 +55,10 @@ class ForwardTextClassificationTrainer:
             self.layer_id_for_check = 20
         elif self.args.model_type == "bert":
             self.layer_id_for_check = 12
+        elif self.args.model_type == "roberta-large":
+            self.layer_id_for_check = 12
+        elif self.args.model_type == "albert":
+            self.layer_id_for_check = 22
         self.var = 0
 
     def set_data(self, train_dl=None, test_dl=None):

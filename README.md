@@ -29,6 +29,7 @@ pip3 install tensorboardX
 pip3 install tqdm
 pip3 install adapter-transformers==3.1.0
 pip3 install functorch
+pip3 install gdown
 
 cd FedML; git submodule init; git submodule update; cd ../; 
 ```
@@ -52,7 +53,7 @@ Some tasks can share the same trainer.
     1. `experiments/distributed/transformer_exps` is the entry point for federated training. It contains experiments for different tasks. We start from `experiments/distributed/transformer_exps/run_tc_exps`.
     2. `experiments/centralized` is used to get the reference model accuracy for FL. 
 
-- `forward_training`: 讲清楚forward_training的代码结构，例如：jvp对应forward gradient计算，calculate_cos_sim对应discriminative sampler...
+- `forward_training`: The forward trainer that uses forward gradient to optimize model parameters. utils includes some tools for forward gradient calculation, such as `calculate_jvp` to calculation Jacobian-vector product using numerical differentiation, `calculate_var` to calculate the variance between multiple forward gradients, `calculate_cos_sim` to calculate the cosine similarity of the perturbation to the previous round gradient.
 
 - `DQ notes`: figs文件夹不需要， 论文还没开源，我们的数据、结果、图片和画图的脚本都不能放到开源的版本里。
 
@@ -60,6 +61,8 @@ Some tasks can share the same trainer.
 We have pre-processed four datasets including AGNEWS, YAHOO, YELP-P and Squad.
 ```bash
 download dataset # TODO: add download script
+gdown https://drive.google.com/uc?id=10S3Zg9HFmBuDkOusycefkugOCu27s0JT
+tar -zxvf fednlp_data.tar
 ```
 
 ## Demo Experiments: AGNEWS for DistilBERT (Discriminative)

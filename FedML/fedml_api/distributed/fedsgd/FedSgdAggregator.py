@@ -43,6 +43,12 @@ class FedSGDAggregator(object):
         elif self.args.model_type == "bert":
             # self.var_threthod = 0.6
             self.var_threthod = 0.2
+        elif self.args.model_type == "roberta-large":
+            # self.var_threthod = 0.6
+            self.var_threthod = 0.2
+        elif self.args.model_type == "albert":
+            # self.var_threthod = 0.6
+            self.var_threthod = 0.1
 
     def get_global_model_params(self):
         return self.trainer.get_model_params()
