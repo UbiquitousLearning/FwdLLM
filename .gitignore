@@ -80,5 +80,5 @@ experiments/centralized/transformer_exps/net_parameters.pkl
 experiments/distributed/transformer_exps/run_tc_exps/log/new/test_fedFwd_distilbert_agnews_lr0.01_client_num_100_numerical.log.var0.1
 
 *.var0.1
-./figs
-./all_figures
+./figs/*
+./all_figures/*
