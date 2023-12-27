@@ -14,6 +14,7 @@ Paper link: https://arxiv.org/abs/2308.13894
 After `git clone`-ing this repository, please run the following command to install our dependencies.
 
 ```bash
+conda create fwdgrad python=3.7.15
 pip3 install cpython
 pip install -r requirements.txt
 # some nail wheels, we install them manually
@@ -56,7 +57,6 @@ Some tasks can share the same trainer.
 ## Data Preparation
 We have pre-processed four datasets including AGNEWS, YAHOO, YELP-P and Squad.
 ```bash
-download dataset # TODO: add download script
 gdown https://drive.google.com/uc?id=10S3Zg9HFmBuDkOusycefkugOCu27s0JT
 tar -zxvf fednlp_data.tar
 ```
@@ -64,7 +64,7 @@ tar -zxvf fednlp_data.tar
 ## Demo Experiments: AGNEWS for DistilBERT (Discriminative)
 ## 前向梯度实验，模型: DistilBERT, 数据集: AGNEWS。
 ```python
-conda activate fwdgrad_py38
+conda activate fwdgrad
 cd experiments/distributed/transformer_exps/run_tc_exps
 sh run_text_classification.sh 1000 0.01 FedFwd
 ```
