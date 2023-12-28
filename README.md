@@ -70,10 +70,22 @@ sh run_text_classification.sh 1000 0.01 FedFwd
 ```
 
 ## Results
-The recipes here dump the model outputs to a file called `xx.jsonl` in the `xx` folder.
-You can find the converged accuracy by searching for `xx`.
+The training log will be saved in `ForwardFL/experiments/distributed/transformer_exps/run_tc_exps/log/new/`
+You can find the the accuracy changes of the model by searching for `acc`.
 
-The following results were obtained on xx 80 GB NVIDIA A100 (the recipe has also been successfully tested on a 24 GB NVIDIA V100):
+The following results were obtained on 45 GB NVIDIA A40 :
+```bash
+grep "'acc':" log/new/test_fedFwd_distilbert_agnews_lr0.01_client_num_100_numerical.log
+```
+and you will get the result as follow
+`56948 2023-12-13,00:37:50.641 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.1929170760254043, 'tp': 275, 'tn': 205, 'fp': 13, 'fn': 44, 'acc': 0.3788157894736842, 'eval_loss': 1.3653460335731507}
+56948 2023-12-13,00:45:16.552 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.40932455654889816, 'tp': 1229, 'tn': 823, 'fp': 236, 'fn': 139, 'acc': 0.5477631578947368, 'eval_loss': 1.3373655635432193}
+56948 2023-12-13,00:52:42.738 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.4718381916383034, 'tp': 780, 'tn': 888, 'fp': 61, 'fn': 98, 'acc': 0.5917105263157895, 'eval_loss': 1.3142965581542567}
+56948 2023-12-13,00:59:51.217 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.5809650861410457, 'tp': 954, 'tn': 1546, 'fp': 104, 'fn': 327, 'acc': 0.6838157894736843, 'eval_loss': 1.2913910858254685}
+56948 2023-12-13,01:07:15.732 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.616786890679179, 'tp': 1299, 'tn': 1461, 'fp': 197, 'fn': 241, 'acc': 0.7109210526315789, 'eval_loss': 1.2616328983557852}
+56948 2023-12-13,01:15:24.855 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.6520238510675961, 'tp': 1110, 'tn': 1474, 'fp': 141, 'fn': 187, 'acc': 0.7386842105263158, 'eval_loss': 1.2299891811922976}
+56948 2023-12-13,01:22:48.791 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.6773361193622469, 'tp': 1221, 'tn': 1628, 'fp': 100, 'fn': 285, 'acc': 0.7568421052631579, 'eval_loss': 1.1899380558415462}
+56948 2023-12-13,01:32:01.860 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.697729266659397, 'tp': 1337, 'tn': 1645, 'fp': 120, 'fn': 270, 'acc': 0.7714473684210527, 'eval_loss': 1.1469027110149985}`
 
 | Model	| Dataset | Clients | accuracy | Training time | Model link (optional) |
 |:------:|:-----:|:-----:|:-----:|:-----:|:-----:|
