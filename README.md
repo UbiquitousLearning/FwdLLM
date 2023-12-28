@@ -73,11 +73,12 @@ sh run_text_classification.sh 1000 0.01 FedFwd
 The training log will be saved in `ForwardFL/experiments/distributed/transformer_exps/run_tc_exps/log/new/`
 You can find the the accuracy changes of the model by searching for `acc`.
 
-The following results were obtained on 45 GB NVIDIA A40 :
+Alternatively, you can run the following command to print the model's acc:
 ```bash
 grep "'acc':" log/new/test_fedFwd_distilbert_agnews_lr0.01_client_num_100_numerical.log
 ```
-and you will get the result as follow
+The following results were obtained on 45 GB NVIDIA A40 :
+
 `56948 2023-12-13,00:37:50.641 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.1929170760254043, 'tp': 275, 'tn': 205, 'fp': 13, 'fn': 44, 'acc': 0.3788157894736842, 'eval_loss': 1.3653460335731507}
 56948 2023-12-13,00:45:16.552 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.40932455654889816, 'tp': 1229, 'tn': 823, 'fp': 236, 'fn': 139, 'acc': 0.5477631578947368, 'eval_loss': 1.3373655635432193}
 56948 2023-12-13,00:52:42.738 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.4718381916383034, 'tp': 780, 'tn': 888, 'fp': 61, 'fn': 98, 'acc': 0.5917105263157895, 'eval_loss': 1.3142965581542567}
