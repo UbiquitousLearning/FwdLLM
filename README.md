@@ -55,7 +55,7 @@ Some tasks can share the same trainer.
 - `forward_training`: The forward trainer that uses forward gradient to optimize model parameters. utils includes some tools for forward gradient calculation, such as `calculate_jvp` to calculation Jacobian-vector product using numerical differentiation, `calculate_var` to calculate the variance between multiple forward gradients, `calculate_cos_sim` to calculate the cosine similarity of the perturbation to the previous round gradient.
 
 ## Data Preparation
-We have pre-processed four datasets including AGNEWS, YAHOO, YELP-P and Squad.
+We have pre-processed four datasets including AGNEWS, YAHOO, YELP-P and Squad.(Need network access to drive.google.com)
 ```bash
 gdown https://drive.google.com/uc?id=10S3Zg9HFmBuDkOusycefkugOCu27s0JT
 tar -zxvf fednlp_data.tar
@@ -87,10 +87,6 @@ The following results were obtained on 45 GB NVIDIA A40 :
 56948 2023-12-13,01:15:24.855 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.6520238510675961, 'tp': 1110, 'tn': 1474, 'fp': 141, 'fn': 187, 'acc': 0.7386842105263158, 'eval_loss': 1.2299891811922976}
 56948 2023-12-13,01:22:48.791 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.6773361193622469, 'tp': 1221, 'tn': 1628, 'fp': 100, 'fn': 285, 'acc': 0.7568421052631579, 'eval_loss': 1.1899380558415462}
 56948 2023-12-13,01:32:01.860 - {tc_transformer_trainer_distribute.py (204)} - eval_model(): {'mcc': 0.697729266659397, 'tp': 1337, 'tn': 1645, 'fp': 120, 'fn': 270, 'acc': 0.7714473684210527, 'eval_loss': 1.1469027110149985}`
-
-| Model	| Dataset | Clients | accuracy | Training time | Model link (optional) |
-|:------:|:-----:|:-----:|:-----:|:-----:|:-----:|
-| xx | xx | 1000 | 75.05 | 1 hour per epoch | https://drive.google.com/drive/folders/103t4_zqBZNqa_gGlIfteIs8_mdKhn3Rd?usp=sharing |
 
 <!-- ## Demo Experiments: LLaMA for Squad (Generative)
 
