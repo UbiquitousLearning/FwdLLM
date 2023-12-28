@@ -78,7 +78,6 @@ The following results were obtained on xx 80 GB NVIDIA A100 (the recipe has also
 | Model	| Dataset | Clients | accuracy | Training time | Model link (optional) |
 |:------:|:-----:|:-----:|:-----:|:-----:|:-----:|
 | xx | xx | 1000 | 75.05 | 1 hour per epoch | https://drive.google.com/drive/folders/103t4_zqBZNqa_gGlIfteIs8_mdKhn3Rd?usp=sharing |
-| Direct (HuBert) | 91.24 | 88.47 | 87.54 | 72.93 | 77.40 | 75.10 | 4 hours per epoch | https://drive.google.com/drive/folders/1LpcuFldRo_Va1OCGp1bLNdiaC7AQNJOb?usp=sharing |
 
 <!-- ## Demo Experiments: LLaMA for Squad (Generative)
 
