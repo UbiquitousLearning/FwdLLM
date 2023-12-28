@@ -69,6 +69,17 @@ cd experiments/distributed/transformer_exps/run_tc_exps
 sh run_text_classification.sh 1000 0.01 FedFwd
 ```
 
+## Results
+The recipes here dump the model outputs to a file called `xx.jsonl` in the `xx` folder.
+You can find the converged accuracy by searching for `xx`.
+
+The following results were obtained on xx 80 GB NVIDIA A100 (the recipe has also been successfully tested on a 24 GB NVIDIA V100):
+
+| Model	| Dataset | Clients | accuracy | Training time | Model link (optional) |
+|:------:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| xx | xx | 1000 | 75.05 | 1 hour per epoch | https://drive.google.com/drive/folders/103t4_zqBZNqa_gGlIfteIs8_mdKhn3Rd?usp=sharing |
+| Direct (HuBert) | 91.24 | 88.47 | 87.54 | 72.93 | 77.40 | 75.10 | 4 hours per epoch | https://drive.google.com/drive/folders/1LpcuFldRo_Va1OCGp1bLNdiaC7AQNJOb?usp=sharing |
+
 <!-- ## Demo Experiments: LLaMA for Squad (Generative)
 
 **TODO**: add the code for LLaMA-7b
