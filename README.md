@@ -14,21 +14,13 @@ Paper link: https://arxiv.org/abs/2308.13894
 After `git clone`-ing this repository, please run the following command to install our dependencies.
 
 ```bash
-conda create fwdgrad python=3.7.15
+conda create --name fwdgrad python=3.7.15
+conda activate fwdgrad
 pip3 install cpython
 pip install -r requirements.txt
 # some nail wheels, we install them manually
 conda install mpi4py=3.0.3=py37hf046da1_1
 conda install six==1.15.0
-
-pip3 install pandas
-pip3 install scipy
-pip3 install scikit-learn
-pip3 install tensorboardX
-pip3 install tqdm
-pip3 install adapter-transformers==3.1.0
-pip3 install functorch
-pip3 install gdown
 
 cd FedML; git submodule init; git submodule update; cd ../; 
 ```
