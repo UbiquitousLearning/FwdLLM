@@ -1,13 +1,13 @@
-# FwdLLM: Federated Fine-tuning of Billion-Sized Language Models with Forward Gradient
+# FwdFL: Efficient Federated Finetuning of Language Models
 
-FwdLLM is the first federated learning framework for large language model (LLM) without backpropagation.
+FwdFL is the first federated learning framework for large language model (LLM) without backpropagation.
 We successfully enables federated fine-tuning of LLaMA-7b, with only 1.5GB peak memory usage on mobile devices.
 
-Paper link: https://arxiv.org/abs/2308.13894
+<!-- Paper link: https://arxiv.org/abs/2308.13894 -->
 
-## TODO:
+<!-- ## TODO:
 - [ ] 如果环境不好装的话，提供docker
-- [ ] future work: 补充llama的实验代码
+- [ ] future work: 补充llama的实验代码 -->
 
 ## Installation
 <!-- http://doc.fedml.ai/#/installation -->
@@ -62,7 +62,7 @@ tar -zxvf fednlp_data.tar
 ```
 
 ## Demo Experiments: AGNEWS for DistilBERT (Discriminative)
-## 前向梯度实验，模型: DistilBERT, 数据集: AGNEWS。
+<!-- ## 前向梯度实验，模型: DistilBERT, 数据集: AGNEWS。 -->
 ```python
 conda activate fwdgrad
 cd experiments/distributed/transformer_exps/run_tc_exps
@@ -91,7 +91,7 @@ The following results were obtained on xx 80 GB NVIDIA A100 (the recipe has also
 ``` -->
 
 
-## Citation
+<!-- ## Citation
 Please cite our FwdLLM paper if it helps your research.
 ```bib
 @misc{xu2023federated,
@@ -102,4 +102,4 @@ Please cite our FwdLLM paper if it helps your research.
       archivePrefix={arXiv},
       primaryClass={cs.AI}
 }
-```
+``` -->
