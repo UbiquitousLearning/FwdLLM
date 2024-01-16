@@ -3,14 +3,8 @@
 FwdFL is the first federated learning framework for large language model (LLM) without backpropagation.
 We successfully enables federated fine-tuning of LLaMA-7b, with only 1.5GB peak memory usage on mobile devices.
 
-<!-- Paper link: https://arxiv.org/abs/2308.13894 -->
-
-<!-- ## TODO:
-- [ ] 如果环境不好装的话，提供docker
-- [ ] future work: 补充llama的实验代码 -->
 
 ## Installation
-<!-- http://doc.fedml.ai/#/installation -->
 After `git clone`-ing this repository, please run the following command to install our dependencies.
 
 ```bash
@@ -54,7 +48,6 @@ tar -zxvf fednlp_data.tar
 ```
 
 ## Demo Experiments: AGNEWS for DistilBERT (Discriminative)
-<!-- ## 前向梯度实验，模型: DistilBERT, 数据集: AGNEWS。 -->
 ```python
 conda activate fwdgrad
 cd experiments/distributed/transformer_exps/run_tc_exps
@@ -80,28 +73,3 @@ The following results were obtained on 45 GB NVIDIA A40 :
 57993 2023-12-29,12:23:46.784 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.6794642083719067, 'tp': 1419, 'tn': 1638, 'fp': 114, 'fn': 271, 'acc': 0.7543421052631579, 'eval_loss': 1.1541506526972118}
 57993 2023-12-29,12:34:21.890 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.7215069617259151, 'tp': 1161, 'tn': 1642, 'fp': 69, 'fn': 157, 'acc': 0.7896052631578947, 'eval_loss': 1.10180882002178}
 57993 2023-12-29,12:46:09.503 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.7216381315733102, 'tp': 1337, 'tn': 1660, 'fp': 69, 'fn': 229, 'acc': 0.7893421052631578, 'eval_loss': 1.04565118105788}`
-
-<!-- ## Demo Experiments: LLaMA for Squad (Generative)
-
-**TODO**: add the code for LLaMA-7b
-### Training
-```python
-```
-
-### Evaluation（给别人我们训好的checkpoint）
-```python
-``` -->
-
-
-<!-- ## Citation
-Please cite our FwdLLM paper if it helps your research.
-```bib
-@misc{xu2023federated,
-      title={Federated Fine-tuning of Billion-Sized Language Models across Mobile Devices}, 
-      author={Mengwei Xu and Yaozong Wu and Dongqi Cai and Xiang Li and Shangguang Wang},
-      year={2023},
-      eprint={2308.13894},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI}
-}
-``` -->
