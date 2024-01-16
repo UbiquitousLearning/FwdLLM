@@ -14,21 +14,13 @@ We successfully enables federated fine-tuning of LLaMA-7b, with only 1.5GB peak 
 After `git clone`-ing this repository, please run the following command to install our dependencies.
 
 ```bash
-conda create fwdgrad python=3.7.15
+conda create --name fwdgrad python=3.7.15
+conda activate fwdgrad
 pip3 install cpython
 pip install -r requirements.txt
 # some nail wheels, we install them manually
 conda install mpi4py=3.0.3=py37hf046da1_1
 conda install six==1.15.0
-
-pip3 install pandas
-pip3 install scipy
-pip3 install scikit-learn
-pip3 install tensorboardX
-pip3 install tqdm
-pip3 install adapter-transformers==3.1.0
-pip3 install functorch
-pip3 install gdown
 
 cd FedML; git submodule init; git submodule update; cd ../; 
 ```
@@ -55,7 +47,7 @@ Some tasks can share the same trainer.
 - `forward_training`: The forward trainer that uses forward gradient to optimize model parameters. utils includes some tools for forward gradient calculation, such as `calculate_jvp` to calculation Jacobian-vector product using numerical differentiation, `calculate_var` to calculate the variance between multiple forward gradients, `calculate_cos_sim` to calculate the cosine similarity of the perturbation to the previous round gradient.
 
 ## Data Preparation
-We have pre-processed four datasets including AGNEWS, YAHOO, YELP-P and Squad.
+We have pre-processed four datasets including AGNEWS, YAHOO, YELP-P and Squad.(Need network access to drive.google.com)
 ```bash
 gdown https://drive.google.com/uc?id=10S3Zg9HFmBuDkOusycefkugOCu27s0JT
 tar -zxvf fednlp_data.tar
@@ -66,18 +58,28 @@ tar -zxvf fednlp_data.tar
 ```python
 conda activate fwdgrad
 cd experiments/distributed/transformer_exps/run_tc_exps
-sh run_text_classification.sh 1000 0.01 FedFwd
+sh run_text_classification.sh 100 0.01 FedFwd
 ```
 
 ## Results
-The recipes here dump the model outputs to a file called `xx.jsonl` in the `xx` folder.
-You can find the converged accuracy by searching for `xx`.
+The training log will be saved in `ForwardFL/experiments/distributed/transformer_exps/run_tc_exps/log/new/`
+You can find the the accuracy changes of the model by searching for `acc`.
 
-The following results were obtained on xx 80 GB NVIDIA A100 (the recipe has also been successfully tested on a 24 GB NVIDIA V100):
+Alternatively, you can run the following command to print the model's acc:
+```bash
+grep "'acc':" log/new/test_fedFwd_distilbert_agnews_lr0.01_client_num_100_numerical.log
+```
+The following results were obtained on 45 GB NVIDIA A40 :
 
-| Model	| Dataset | Clients | accuracy | Training time | Model link (optional) |
-|:------:|:-----:|:-----:|:-----:|:-----:|:-----:|
-| xx | xx | 1000 | 75.05 | 1 hour per epoch | https://drive.google.com/drive/folders/103t4_zqBZNqa_gGlIfteIs8_mdKhn3Rd?usp=sharing |
+`57993 2023-12-29,11:36:41.934 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.21389454684597403, 'tp': 558, 'tn': 413, 'fp': 97, 'fn': 93, 'acc': 0.3932894736842105, 'eval_loss': 1.3563928922853972}
+57993 2023-12-29,11:44:24.629 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.43467640667443247, 'tp': 1405, 'tn': 711, 'fp': 297, 'fn': 34, 'acc': 0.5664473684210526, 'eval_loss': 1.3242651747402392}
+57993 2023-12-29,11:51:29.268 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.5526736797408484, 'tp': 959, 'tn': 1682, 'fp': 54, 'fn': 478, 'acc': 0.655921052631579, 'eval_loss': 1.2980173840020832}
+57993 2023-12-29,11:59:11.228 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.6220521689647075, 'tp': 1078, 'tn': 1316, 'fp': 96, 'fn': 137, 'acc': 0.7147368421052631, 'eval_loss': 1.2667237215293081}
+57993 2023-12-29,12:06:38.357 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.643593099979723, 'tp': 1450, 'tn': 1497, 'fp': 173, 'fn': 177, 'acc': 0.7261842105263158, 'eval_loss': 1.2404077385601244}
+57993 2023-12-29,12:14:13.438 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.6495114313174073, 'tp': 1570, 'tn': 1556, 'fp': 195, 'fn': 185, 'acc': 0.7255263157894737, 'eval_loss': 1.1989253973960876}
+57993 2023-12-29,12:23:46.784 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.6794642083719067, 'tp': 1419, 'tn': 1638, 'fp': 114, 'fn': 271, 'acc': 0.7543421052631579, 'eval_loss': 1.1541506526972118}
+57993 2023-12-29,12:34:21.890 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.7215069617259151, 'tp': 1161, 'tn': 1642, 'fp': 69, 'fn': 157, 'acc': 0.7896052631578947, 'eval_loss': 1.10180882002178}
+57993 2023-12-29,12:46:09.503 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.7216381315733102, 'tp': 1337, 'tn': 1660, 'fp': 69, 'fn': 229, 'acc': 0.7893421052631578, 'eval_loss': 1.04565118105788}`
 
 <!-- ## Demo Experiments: LLaMA for Squad (Generative)
 
