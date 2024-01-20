@@ -1,9 +1,9 @@
-# FwdFL: Efficient Federated Finetuning of Language Models
+# FwdLLM: Efficient FedLLM using Forward Gradient
 
-FwdFL is the first federated learning framework for large language model (LLM) without backpropagation.
+FwdLLM is the first federated learning framework for large language model (LLM) without backpropagation.
 We successfully enables federated fine-tuning of LLaMA-7b, with only 1.5GB peak memory usage on mobile devices.
 
-<!-- Paper link: https://arxiv.org/abs/2308.13894 -->
+Paper link: https://arxiv.org/abs/2308.13894
 
 <!-- ## TODO:
 - [ ] 如果环境不好装的话，提供docker
@@ -93,7 +93,7 @@ The following results were obtained on 45 GB NVIDIA A40 :
 ``` -->
 
 
-<!-- ## Citation
+## Citation
 Please cite our FwdLLM paper if it helps your research.
 ```bib
 @misc{xu2023federated,
@@ -104,4 +104,4 @@ Please cite our FwdLLM paper if it helps your research.
       archivePrefix={arXiv},
       primaryClass={cs.AI}
 }
-``` -->
+```
