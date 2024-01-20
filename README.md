@@ -62,7 +62,7 @@ sh run_text_classification.sh 100 0.01 FedFwd
 ```
 
 ## Results
-The training log will be saved in `ForwardFL/experiments/distributed/transformer_exps/run_tc_exps/log/new/`
+The training log will be saved in `FwdFL/experiments/distributed/transformer_exps/run_tc_exps/log/new/`
 You can find the the accuracy changes of the model by searching for `acc`.
 
 Alternatively, you can run the following command to print the model's acc:
