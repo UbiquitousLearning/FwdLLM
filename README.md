@@ -96,10 +96,10 @@ The following results were obtained on 45 GB NVIDIA A40 :
 ## Citation
 Please cite our FwdLLM paper if it helps your research.
 ```bib
-@misc{xu2023federated,
-      title={Federated Fine-tuning of Billion-Sized Language Models across Mobile Devices}, 
-      author={Mengwei Xu and Yaozong Wu and Dongqi Cai and Xiang Li and Shangguang Wang},
-      year={2023},
+@misc{xu2024fwdllm,
+      title={FwdLLM: Efficient FedLLM using Forward Gradient}, 
+      author={Mengwei Xu and Dongqi Cai and Yaozong Wu and Xiang Li and Shangguang Wang},
+      year={2024},
       eprint={2308.13894},
       archivePrefix={arXiv},
       primaryClass={cs.AI}
