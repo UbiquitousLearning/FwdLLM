@@ -81,16 +81,13 @@ The following results were obtained on 45 GB NVIDIA A40 :
 57993 2023-12-29,12:34:21.890 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.7215069617259151, 'tp': 1161, 'tn': 1642, 'fp': 69, 'fn': 157, 'acc': 0.7896052631578947, 'eval_loss': 1.10180882002178}
 57993 2023-12-29,12:46:09.503 - {tc_transformer_trainer_distribute.py (208)} - eval_model(): {'mcc': 0.7216381315733102, 'tp': 1337, 'tn': 1660, 'fp': 69, 'fn': 229, 'acc': 0.7893421052631578, 'eval_loss': 1.04565118105788}`
 
-<!-- ## Demo Experiments: LLaMA for Squad (Generative)
-
-**TODO**: add the code for LLaMA-7b
-### Training
-```python
+## Replicate Figure 10 in the paper
+We provide scripts and referenced logs to reproduce the end-to-end results in the paper, which you can download from Google Drive.
+```bash
+gdown https://drive.google.com/uc?id=1urhXRKyOau6Ng6bAaFA99w2Kil-75Awg
+tar -zxvf end2end_figure.tar.gz
 ```
-
-### Evaluation（给别人我们训好的checkpoint）
-```python
-``` -->
+And then use figure.ipynb to reproduce the results.
 
 
 ## Citation
