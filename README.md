@@ -89,6 +89,14 @@ tar -zxvf end2end_figure.tar.gz
 ```
 And then use figure.ipynb to reproduce the results.
 
+## Other results
+For the replication of `non-iid results` and `system cost analysis`, please download the raw data and plot scripts from [Google Drvie](https://drive.google.com/file/d/1P8DCQ3pge3W68_crHINTP5JnnJz2AFf5/view?usp=sharing).
+
+```bash
+tar -zxvf e2e.tar.gz
+```
+
+By default, those plot scripts would utilize the raw data log to draw the figures. If you want to draw the results yourselves, you could replace the log name with yours in the scripts.
 
 ## Citation
 Please cite our FwdLLM paper if it helps your research.
