@@ -115,5 +115,7 @@ Please cite our FwdLLM paper if it helps your research.
       archivePrefix={arXiv},
       primaryClass={cs.AI}
 }
-We thank anonymous USENIX ATC AE reviewers to make this artifact better.
 ```
+
+## Acknowledge
+We thank anonymous USENIX ATC AE reviewers to make this artifact better.
