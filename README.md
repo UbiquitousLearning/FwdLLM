@@ -98,6 +98,12 @@ tar -zxvf e2e.tar.gz
 
 By default, those plot scripts would utilize the raw data log to draw the figures. If you want to draw the results yourselves, you could replace the log name with yours in the scripts.
 
+## Discussion during AE
+- The provided command `sh run_text_classification.sh 100 0.01 FedFwd` only produces results of FwdFL on AGNEWS with DistilBERT. If you want to run baselines, you could change the last arguement `FL_ALG` from `FedFwd` to `FedAvg`/`FedSgd`. If you want to change the dataset/model, please manually replace the variables in the front of the  script.  
+- As for baselines, we would like to clarify that the FL_ALG `FedAvg/FedSgd` is already **with** adapter enabled. This can be verified in `run_text_classification.sh` at `line 83`, which includes the command `--use_adapter True`. 
+- To reproduce the baselines with the adapter, please run the following command: `sh run_text_classification.sh 100 0.01 FedAvg`. If you wish to reproduce the baselines without the adapter, you will need to change `--use_adapter True` to `--use_adapter False` manually.
+- We do test FwdFL in V100, the time needed for convergence is similar. We guess the speedup from stronger GPU might not be significant, because the simulation bottleneck could be CPU or disk IO.
+
 ## Citation
 Please cite our FwdLLM paper if it helps your research.
 ```bib
@@ -109,4 +115,5 @@ Please cite our FwdLLM paper if it helps your research.
       archivePrefix={arXiv},
       primaryClass={cs.AI}
 }
+We thank anonymous USENIX ATC AE reviewers to make this artifact better.
 ```
